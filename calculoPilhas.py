@@ -1,7 +1,7 @@
 import numpy as np
 
 def criaMatPadraoPeca(instancia):
-    caminho = '/cenarios/' + instancia + '.txt'
+    caminho = 'cenarios/' + instancia + '.txt'
     with open(caminho, 'rb') as f:
         nrows, ncols = [int(field) for field in f.readline().split()]
         data = np.genfromtxt(f, dtype="int32", max_rows=nrows) #OBS. Instancias estao no formato padrao x peca
