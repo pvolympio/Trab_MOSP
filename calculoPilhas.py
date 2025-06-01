@@ -1,4 +1,5 @@
 import numpy as np
+import networkx as nx
 
 def criaMatPadraoPeca(instancia):
     caminho = 'cenarios/' + instancia + '.txt'
@@ -17,3 +18,22 @@ def NMPA(LP, matPaPe):
         pa = [np.sum(Q)]
     return np.amax(pa) # Obtém a maior pilha do vetor
 
+def construir_grafo(matPaPe):
+    n_padroes = matPaPe.shape[0]
+    G = nx.Graph()
+
+    # Adiciona todos os padrões como vértices
+    G.add_nodes_from(range(n_padroes))
+
+    # Adiciona arestas entre padrões que compartilham ao menos uma peça
+    for i in range(n_padroes):
+        for j in range(i + 1, n_padroes):
+            if np.any(matPaPe[i] & matPaPe[j]):
+                G.add_edge(i, j)
+
+    return G
+
+Grafo = criaMatPadraoPeca("Cenário 3 - 1 - exemplo")
+
+G = construir_grafo(Grafo)
+print(G)
