@@ -1,0 +1,12 @@
+Instancia,NMPA_BFS,NMPA_DFS,NMPA_Hibrida,NMPA_Random
+Cenário 3 - 1 - exemplo,8,8,8,7
+Cenário 3 - 10 - Random-400-400-4-1,251,290,258,317
+Cenário 3 - 11 - Random-1000-1000-8-5,907,969,907,979
+Cenário 3 - 2 - Miller,16,20,16,20
+Cenário 3 - 3 - p4050n10,26,32,26,30
+Cenário 3 - 4 - scoop-A_FA+AA-_12,16,17,16,17
+Cenário 3 - 5 - scoop-A_FA+AA-_13,27,30,28,41
+Cenário 3 - 6 - scoop-B_22X18_50,10,10,10,13
+Cenário 3 - 7 - Random-30-30-6-2,25,28,28,28
+Cenário 3 - 8 - Random-100-50-4-3,38,49,48,53
+Cenário 3 - 9 - Random-150-150-6-1,124,137,134,140

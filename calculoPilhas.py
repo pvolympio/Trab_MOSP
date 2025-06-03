@@ -4,7 +4,7 @@ from DFS import DeepFirstSearch, DFSIterativa, DFS
 from BFS import BFS
 
 def criaMatPadraoPeca(instancia):
-    caminho = 'cenarios/' + instancia + '.txt'
+    caminho =  instancia + '.txt'
     with open(caminho, 'rb') as f:
         nrows, ncols = [int(field) for field in f.readline().split()]
         data = np.genfromtxt(f, dtype="int32", max_rows=nrows) #OBS. Instancias estao no formato padrao x peca
@@ -72,3 +72,8 @@ def heuristica_hibrida_adaptativa(G, limiar_densidade=0.3):
         visitados.update(seq)
 
     return seq_final
+def aleatoria(G):
+    import random
+    vertices = list(G.nodes())
+    random.shuffle(vertices)
+    return vertices
