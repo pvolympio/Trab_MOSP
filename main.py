@@ -26,3 +26,7 @@ def main():
     print(f"Sequência de padrões (LP): {LP}")
     print(f"NMPA (Número Máximo de Pilhas Abertas): {resultado}")
     print("-" * 50)
+
+    
+if __name__ == "__main__":
+    main()
