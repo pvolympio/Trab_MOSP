@@ -1,10 +1,13 @@
 import numpy as np
 import networkx as nx
-from DFS import DeepFirstSearch, DFSIterativa, DFS
+from networkx.algorithms.cluster import average_clustering
+from networkx.algorithms.link_prediction import jaccard_coefficient
+from DFS import dfs_completo, DFS
 from BFS import BFS
+import random
 
 def criaMatPadraoPeca(instancia):
-    caminho = 'cenarios/' + instancia + '.txt'
+    caminho =  instancia + '.txt'
     with open(caminho, 'rb') as f:
         nrows, ncols = [int(field) for field in f.readline().split()]
         data = np.genfromtxt(f, dtype="int32", max_rows=nrows) #OBS. Instancias estao no formato padrao x peca
@@ -35,40 +38,63 @@ def construir_grafo(matPaPe):
 
     return G
 
+def conectividade_local(G_sub, alpha=0.6, beta=0.4):
+    """
+    Calcula a conectividade local combinando:
+    - Clustering médio
+    - Jaccard médio entre vértices conectados
+    alpha + beta devem somar 1
+    """
+    clustering = average_clustering(G_sub)
+
+    jaccard_scores = list(jaccard_coefficient(G_sub, G_sub.edges()))
+    jaccard_valores = [s[2] for s in jaccard_scores]
+    jaccard_medio = sum(jaccard_valores) / len(jaccard_valores) if jaccard_valores else 0
+
+    return alpha * clustering + beta * jaccard_medio
 
 
 
-def heuristica_hibrida_adaptativa(G, limiar_densidade=0.3):
+
+def heuristica_hibrida_adaptativa(G, limiar_conectividade=0.3, alpha=0.6, beta=0.4):
     visitados = set()
     seq_final = []
 
     # Vértice de maior grau
     v_inicial = max(G.degree, key=lambda x: x[1])[0]
-
-    # Primeiro componente
     componente_inicial = nx.node_connected_component(G, v_inicial)
     subgrafo_inicial = G.subgraph(componente_inicial)
-    
+
     seq = BFS(subgrafo_inicial, v_inicial)
     seq_final.extend(seq)
     visitados.update(seq)
 
-    # Demais componentes
+    # Processar componentes restantes
     for componente in nx.connected_components(G):
         comp_nao_visitados = [v for v in componente if v not in visitados]
         if not comp_nao_visitados:
             continue
 
         subgrafo = G.subgraph(comp_nao_visitados)
-        densidade = nx.density(subgrafo)
         v_inicio = comp_nao_visitados[0]
 
-        if densidade >= limiar_densidade:
-            seq = BFS(subgrafo, v_inicio)
+        # Caso especial: subgrafo desconectado ou com poucos vértices
+        if subgrafo.number_of_nodes() <= 2 or subgrafo.degree(v_inicio) == 0:
+            seq = dfs_completo(subgrafo)
         else:
-            seq = DFS(subgrafo, v_inicio)
+            conectividade = conectividade_local(subgrafo, alpha, beta)
+            if conectividade >= limiar_conectividade:
+                seq = BFS(subgrafo, v_inicio)
+            else:
+                seq = DFS(subgrafo, v_inicio)
 
         seq_final.extend(seq)
         visitados.update(seq)
 
     return seq_final
+
+def aleatoria(grafo):
+    """Gera uma ordem aleatória dos padrões."""
+    vertices = list(grafo.nodes())
+    random.shuffle(vertices)
+    return vertices

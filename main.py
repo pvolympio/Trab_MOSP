@@ -6,7 +6,7 @@ import BFS
 
 def main():
     # Nome da instância (sem .txt)
-    nome_instancia = "Cenário 3 - 1 - exemplo"
+    nome_instancia = "cenarios\Cenário 3 - 1 - exemplo"
 
     # 1. Ler a matriz padrões x peças
     matPaPe = criaMatPadraoPeca(nome_instancia)
@@ -15,7 +15,7 @@ def main():
     G = construir_grafo(matPaPe)
 
     # 3. Aplicar a heurística híbrida adaptativa
-    LP = heuristica_hibrida_adaptativa(G, limiar_densidade=0.3)
+    LP = heuristica_hibrida_adaptativa(G)
 
     # 4. Calcular o NMPA
     resultado = NMPA(LP, matPaPe)

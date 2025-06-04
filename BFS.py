@@ -1,14 +1,17 @@
-def BFS(listaAdj, v):
-    q = []
+def BFS(G, v_inicial):
+    from collections import deque
+
+    visitados = set([v_inicial])
+    fila = deque([v_inicial])
     resultado = []
-    q.append(v)
-    while(len(q) != 0):
-        v = q.pop(0)
-        for i in listaAdj[v]:
-            if (i not in q) & (i not in resultado):
-                q.append(i)
-        resultado.append(v)
-    for j in listaAdj:
-        if j not in resultado:
-            resultado.append(j)
+
+    while fila:
+        atual = fila.popleft()
+        resultado.append(atual)
+
+        for vizinho in sorted(G.neighbors(atual)):
+            if vizinho not in visitados:
+                visitados.add(vizinho)
+                fila.append(vizinho)
+
     return resultado
