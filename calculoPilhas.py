@@ -1,79 +1,103 @@
 import numpy as np
 import networkx as nx
-from DFS import DeepFirstSearch, DFSIterativa, DFS
+import random
+from DFS import DFS
 from BFS import BFS
 
-def criaMatPadraoPeca(instancia):
-    caminho =  instancia + '.txt'
+def carregar_matriz_padrao_peca(nome_arquivo):
+    """Lê a matriz padrão x peça a partir de um arquivo."""
+    caminho = nome_arquivo + '.txt'
     with open(caminho, 'rb') as f:
-        nrows, ncols = [int(field) for field in f.readline().split()]
-        data = np.genfromtxt(f, dtype="int32", max_rows=nrows) #OBS. Instancias estao no formato padrao x peca
-    return data
+        nrows, ncols = [int(x) for x in f.readline().split()]
+        matriz = np.genfromtxt(f, dtype='int32', max_rows=nrows)
+    return matriz
 
-def NMPA(LP, matPaPe):
-    if len(LP) > 1:
-        Q = matPaPe[LP, :]
-        Q = np.maximum.accumulate(Q, axis=0) & np.maximum.accumulate(Q[::-1, :], axis=0)[::-1, :]
-        pa = np.sum(Q, 1)
-    else: # Apenas usado no caso de matrizes com uma só coluna.
-        Q = matPaPe[LP, :]
-        pa = [np.sum(Q)]
-    return np.amax(pa) # Obtém a maior pilha do vetor
+import numpy as np
 
-def construir_grafo(matPaPe):
-    n_padroes = matPaPe.shape[0]
+def calcular_maximo_pilhas_usando_padrao_padrao(ordem_padroes, matriz_padrao_peca):
+    """
+    Calcula o número máximo de pilhas abertas (peças simultaneamente ativas)
+    com base na ordem de aplicação dos padrões.
+
+    Parâmetros:
+    - ordem_padroes: lista com a ordem dos padrões (índices dos vértices do grafo)
+    - matriz_padrao_peca: matriz binária (padrão x peça), onde 1 indica uso da peça
+
+    Retorna:
+    - Um inteiro representando o número máximo de pilhas abertas em algum momento
+    """
+    if len(ordem_padroes) <= 1:
+        return int(np.sum(matriz_padrao_peca[ordem_padroes[0]]))
+
+    # Submatriz na ordem desejada
+    Q = matriz_padrao_peca[ordem_padroes, :]
+    
+    # Acúmulo da esquerda para a direita
+    acumulado_frente = np.maximum.accumulate(Q, axis=0)
+    
+    # Acúmulo da direita para a esquerda (reverso)
+    acumulado_tras = np.maximum.accumulate(Q[::-1, :], axis=0)[::-1, :]
+    
+    # Peças que permanecem ativas entre o início e fim da sequência
+    combinacao = acumulado_frente & acumulado_tras
+    
+    # Quantas peças estão ativas em cada etapa
+    pilhas_por_etapa = np.sum(combinacao, axis=1)
+
+    # Retorna o maior número de pilhas simultaneamente abertas
+    return int(np.max(pilhas_por_etapa))
+
+
+def gerar_matriz_padrao_padrao(matriz_padrao_peca):
+    """Gera uma matriz padrão x padrão com base na sobreposição de peças."""
+    return matriz_padrao_peca @ matriz_padrao_peca.T
+
+def construir_grafo_por_pecas_em_comum(mat_padrao_peca):
+    """Cria um grafo onde os nós são padrões, com arestas entre padrões que compartilham peças."""
+    n_padroes = mat_padrao_peca.shape[0]
     G = nx.Graph()
-
-    # Adiciona todos os padrões como vértices
-    G.add_nodes_from(range(n_padroes))
-
-    # Adiciona arestas entre padrões que compartilham ao menos uma peça
+    
     for i in range(n_padroes):
+        G.add_node(i)
         for j in range(i + 1, n_padroes):
-            if np.any(matPaPe[i] & matPaPe[j]):
+            # Se os padrões i e j compartilham ao menos uma peça
+            if np.any(mat_padrao_peca[i] & mat_padrao_peca[j]):
                 G.add_edge(i, j)
-
+    
     return G
 
-
-
-
-def heuristica_hibrida_adaptativa(G, limiar_densidade=0.3):
+def heuristica_hibrida_por_densidade(grafo, limiar=0.3):
+    """Define uma ordem de visita híbrida (BFS ou DFS) com base na densidade dos componentes."""
     visitados = set()
-    seq_final = []
+    ordem_total = []
 
-    # Vértice de maior grau
-    v_inicial = max(G.degree, key=lambda x: x[1])[0]
+    # Começa pelo nó com maior grau
+    no_inicial = max(grafo.degree, key=lambda x: x[1])[0]
+    componente = nx.node_connected_component(grafo, no_inicial)
+    subgrafo = grafo.subgraph(componente)
+    ordem = BFS(subgrafo, no_inicial)
+    ordem_total.extend(ordem)
+    visitados.update(ordem)
 
-    # Primeiro componente
-    componente_inicial = nx.node_connected_component(G, v_inicial)
-    subgrafo_inicial = G.subgraph(componente_inicial)
-    
-    seq = BFS(subgrafo_inicial, v_inicial)
-    seq_final.extend(seq)
-    visitados.update(seq)
-
-    # Demais componentes
-    for componente in nx.connected_components(G):
-        comp_nao_visitados = [v for v in componente if v not in visitados]
-        if not comp_nao_visitados:
+    # Visita os demais componentes
+    for comp in nx.connected_components(grafo):
+        restantes = [v for v in comp if v not in visitados]
+        if not restantes:
             continue
-
-        subgrafo = G.subgraph(comp_nao_visitados)
-        densidade = nx.density(subgrafo)
-        v_inicio = comp_nao_visitados[0]
-
-        if densidade >= limiar_densidade:
-            seq = BFS(subgrafo, v_inicio)
+        sub = grafo.subgraph(restantes)
+        densidade = nx.density(sub)
+        inicio = restantes[0]
+        if densidade >= limiar:
+            ordem = BFS(sub, inicio)
         else:
-            seq = DFS(subgrafo, v_inicio)
+            ordem = DFS(sub, inicio)
+        ordem_total.extend(ordem)
+        visitados.update(ordem)
 
-        seq_final.extend(seq)
-        visitados.update(seq)
+    return ordem_total
 
-    return seq_final
-def aleatoria(G):
-    import random
-    vertices = list(G.nodes())
+def ordem_aleatoria(grafo):
+    """Gera uma ordem aleatória dos padrões."""
+    vertices = list(grafo.nodes())
     random.shuffle(vertices)
     return vertices
