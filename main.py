@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 import DFS
-from calculoPilhas import criaMatPadraoPeca, NMPA, construir_grafo,heuristica_hibrida_adaptativa
+from calculoPilhas import criaMatPadraoPeca, NMPA, construir_grafo,heuristica_hibrida_por_densidade, heuristica_hibrida_avancada
 import BFS
 
 def main():
@@ -11,11 +11,9 @@ def main():
     # 1. Ler a matriz padrões x peças
     matPaPe = criaMatPadraoPeca(nome_instancia)
 
-    # 2. Construir o grafo
     G = construir_grafo(matPaPe)
+    LP = heuristica_hibrida_avancada(G, matPaPe)
 
-    # 3. Aplicar a heurística híbrida adaptativa
-    LP = heuristica_hibrida_adaptativa(G)
 
     # 4. Calcular o NMPA
     resultado = NMPA(LP, matPaPe)

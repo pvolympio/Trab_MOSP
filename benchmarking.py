@@ -2,7 +2,7 @@ import os
 import csv
 from DFS import DFS
 from BFS import BFS
-from calculoPilhas import criaMatPadraoPeca, NMPA, construir_grafo,heuristica_hibrida_adaptativa, aleatoria
+from calculoPilhas import criaMatPadraoPeca, NMPA, construir_grafo,heuristica_hibrida_por_densidade, aleatoria, heuristica_hibrida_avancada
 
 def executar_benchmark(pasta_instancias, caminho_saida_csv):
     resultados = []
@@ -17,21 +17,23 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv):
 
             LP_bfs = BFS(G,0)
             LP_dfs = DFS(G,0)
-            LP_hibrida = heuristica_hibrida_adaptativa(G)
+            LP_hibrida = heuristica_hibrida_por_densidade(G)
+            LP_hibrida_avancada = heuristica_hibrida_avancada(G, mat)
             LP_random = aleatoria(G)
 
             resultados.append({
-                "Instancia": nome,
-                "NMPA_BFS": NMPA(LP_bfs, mat),
-                "NMPA_DFS": NMPA(LP_dfs, mat),
-                "NMPA_Hibrida": NMPA(LP_hibrida, mat),
-                "NMPA_Random": NMPA(LP_random, mat)
-            })
-
+    "Instancia": nome,
+    "NMPA_BFS": NMPA(BFS(G,0), mat),
+    "NMPA_DFS": NMPA(DFS(G,0), mat),
+    "NMPA_Hibrida": NMPA(heuristica_hibrida_por_densidade(G), mat),
+    "NMPA_HibridaAvancada": NMPA(LP_hibrida_avancada, mat),
+    "NMPA_Random": NMPA(aleatoria(G), mat)
+})
     # Escrever o CSV
     os.makedirs(os.path.dirname(caminho_saida_csv), exist_ok=True)
     with open(caminho_saida_csv, mode='w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=["Instancia", "NMPA_BFS", "NMPA_DFS", "NMPA_Hibrida", "NMPA_Random"])
+        writer = csv.DictWriter(f, fieldnames=["Instancia", "NMPA_BFS", "NMPA_DFS", "NMPA_Hibrida", "NMPA_HibridaAvancada", "NMPA_Random"]
+)
         writer.writeheader()
         writer.writerows(resultados)
 
