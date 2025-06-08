@@ -1,204 +1,181 @@
 import numpy as np
 import networkx as nx
-from DFS import  DFS
-from BFS import BFS
+from DFS import DFS, dfs_limitado  # Funções personalizadas de busca em profundidade
+from BFS import BFS, bfs_adaptativo  # Funções personalizadas de busca em largura
 import random
-from collections import deque
+from collections import deque, defaultdict
+from sklearn.cluster import AgglomerativeClustering  # (Importado mas não utilizado)
+import itertools
 
+# ------------------------------
+# Função para ler a instância (matriz padrão x peça) a partir de um arquivo
+# ------------------------------
 def criaMatPadraoPeca(instancia):
-    caminho =  instancia + '.txt'
+    caminho = instancia + '.txt'  # Monta o caminho para o arquivo da instância
     with open(caminho, 'rb') as f:
-        nrows, ncols = [int(field) for field in f.readline().split()]
-        data = np.genfromtxt(f, dtype="int32", max_rows=nrows) #OBS. Instancias estao no formato padrao x peca
+        nrows, ncols = [int(field) for field in f.readline().split()]  # Lê dimensões
+        data = np.genfromtxt(f, dtype="int32", max_rows=nrows)  # Lê os dados como matriz binária
     return data
 
+# ------------------------------
+# Função que calcula o número máximo de pilhas abertas (NMPA)
+# ------------------------------
 def NMPA(LP, matPaPe):
     if len(LP) > 1:
-        Q = matPaPe[LP, :]
+        Q = matPaPe[LP, :]  # Seleciona os padrões da sequência
+        # Calcula a quantidade de pilhas abertas em cada instante
         Q = np.maximum.accumulate(Q, axis=0) & np.maximum.accumulate(Q[::-1, :], axis=0)[::-1, :]
         pa = np.sum(Q, 1)
-    else: # Apenas usado no caso de matrizes com uma só coluna.
+    else:
         Q = matPaPe[LP, :]
         pa = [np.sum(Q)]
-    return np.amax(pa) # Obtém a maior pilha do vetor
+    return np.amax(pa)  # Retorna o maior número de pilhas abertas em qualquer instante
 
+# ------------------------------
+# Constrói o grafo padrão x padrão (ADRA)
+# ------------------------------
 def construir_grafo(matPaPe):
     n_padroes = matPaPe.shape[0]
     G = nx.Graph()
+    G.add_nodes_from(range(n_padroes))  # Adiciona cada padrão como vértice
 
-    # Adiciona todos os padrões como vértices
-    G.add_nodes_from(range(n_padroes))
-
-    # Adiciona arestas entre padrões que compartilham ao menos uma peça
     for i in range(n_padroes):
         for j in range(i + 1, n_padroes):
-            if np.any(matPaPe[i] & matPaPe[j]):
+            if np.any(matPaPe[i] & matPaPe[j]):  # Se compartilham pelo menos uma peça
                 G.add_edge(i, j)
 
     return G
 
-def heuristica_hibrida_por_densidade(G):
-    """
-    Heurística híbrida por densidade:
-    - Usa BFS como padrão
-    - Usa DFS apenas em componentes grandes e esparsos (densidade < 0.2 e > 4 nós)
-    """
-    visitados = set()
-    seq_final = []
+# ------------------------------
+# Calcula métricas estruturais do componente conectado
+# ------------------------------
+def calcular_metricas_componente(subgrafo, matPaPe):
+    densidade = nx.density(subgrafo)
+    clustering = nx.average_clustering(subgrafo)
+    graus = dict(subgrafo.degree())
 
-    # Primeiro componente (vértice de maior grau)
-    v_inicial = max(G.degree, key=lambda x: x[1])[0]
-    componente_inicial = nx.node_connected_component(G, v_inicial)
-    subgrafo_inicial = G.subgraph(componente_inicial)
-    densidade = nx.density(subgrafo_inicial)
+    # Mede a diversidade de peças do componente (proporção de peças presentes)
+    pecas_componente = np.sum(matPaPe[list(subgrafo.nodes())], axis=0)
+    diversidade = np.sum(pecas_componente > 0) / matPaPe.shape[1]
 
-    if len(subgrafo_inicial) > 4 and densidade < 0.2:
-        seq = DFS(subgrafo_inicial, v_inicial)
-    else:
-        seq = BFS(subgrafo_inicial, v_inicial)
+    return {
+        'densidade': densidade,
+        'clustering': clustering,
+        'grau_medio': sum(graus.values()) / len(subgrafo),
+        'diversidade': diversidade
+    }
 
-    seq_final.extend(seq)
-    visitados.update(seq)
+# ------------------------------
+# Seleciona o nó inicial com base em critérios de conectividade e criticidade de peças
+# ------------------------------
+def selecionar_no_inicial(subgrafo, matPaPe):
+    nos = list(subgrafo.nodes())
 
-    # Demais componentes
-    for componente in nx.connected_components(G):
-        comp_nao_visitados = [v for v in componente if v not in visitados]
-        if not comp_nao_visitados:
-            continue
+    # Identifica as peças mais presentes no componente
+    pecas_componente = np.sum(matPaPe[nos], axis=0)
+    pecas_criticas = np.argsort(-pecas_componente)[:3]  # Top 3 peças mais usadas
 
-        subgrafo = G.subgraph(comp_nao_visitados)
-        v_inicio = comp_nao_visitados[0]
-        densidade = nx.density(subgrafo)
+    scores = []
+    for no in nos:
+        grau = subgrafo.degree(no)
+        peso_pecas_criticas = np.sum(matPaPe[no][pecas_criticas])
+        penalidade_pecas = 0.2 * np.sum(matPaPe[no])  # Penaliza padrões com muitas peças
 
-        if len(subgrafo) > 4 and densidade < 0.2:
-            seq = DFS(subgrafo, v_inicio)
-        else:
-            seq = BFS(subgrafo, v_inicio)
+        score = (0.4 * grau + 0.5 * peso_pecas_criticas - penalidade_pecas)
+        scores.append(score)
 
-        seq_final.extend(seq)
-        visitados.update(seq)
+    return nos[np.argmax(scores)]  # Retorna o nó com melhor pontuação
 
-    return seq_final
+# ------------------------------
+# Refinamento global e local com trocas entre posições
+# ------------------------------
+def refinamento_diferenciado(sequencia, matPaPe, n_iter=5):
+    melhor_seq = sequencia.copy()
+    melhor_nmpa = NMPA(sequencia, matPaPe)
 
+    for _ in range(n_iter):
+        for i in range(len(sequencia) - 1):
+            nova_seq = sequencia.copy()
+            nova_seq[i], nova_seq[i + 1] = nova_seq[i + 1], nova_seq[i]  # Troca adjacente
+            novo_nmpa = NMPA(nova_seq, matPaPe)
 
-def aleatoria(grafo):
-    """Gera uma ordem aleatória dos padrões."""
-    vertices = list(grafo.nodes())
-    random.shuffle(vertices)
-    return vertices
+            if novo_nmpa < melhor_nmpa:
+                melhor_seq, melhor_nmpa = nova_seq, novo_nmpa
 
-def similaridade(matPaPe, u, v):
-    return np.dot(matPaPe[u], matPaPe[v])
+            # Trocas não adjacentes para explorar mais o espaço de soluções
+            if i < len(sequencia) - 3:
+                for j in range(i + 2, min(i + 5, len(sequencia))):
+                    nova_seq = sequencia.copy()
+                    nova_seq[i], nova_seq[j] = nova_seq[j], nova_seq[i]
+                    novo_nmpa = NMPA(nova_seq, matPaPe)
 
-def metrica_combinada(G_sub):
-    dens = nx.density(G_sub)
-    cluster = nx.average_clustering(G_sub)
-    return 0.6 * dens + 0.4 * cluster
+                    if novo_nmpa < melhor_nmpa:
+                        melhor_seq, melhor_nmpa = nova_seq, novo_nmpa
 
-def diversidade_pecas(matPaPe, indices):
-    submat = matPaPe[indices, :]
-    usos = np.sum(submat, axis=1)
-    return np.mean(usos)
+        sequencia = melhor_seq.copy()
 
-def ordenar_vizinhos_lookahead(G, atual, matPaPe, visitados, profundidade=1):
-    vizinhos = [v for v in G.neighbors(atual) if v not in visitados]
-    pontuacoes = []
+    return melhor_seq
 
-    for v in vizinhos:
-        score = similaridade(matPaPe, atual, v)
-        if profundidade > 1:
-            sub_viz = [u for u in G.neighbors(v) if u not in visitados and u != atual]
-            score += sum(similaridade(matPaPe, v, u) for u in sub_viz)
-        pontuacoes.append((v, score))
+# ------------------------------
+# Refinamento focado em "hotspots" de pilhas abertas
+# ------------------------------
+def refinamento_hotspots(sequencia, matPaPe, janela=5):
+    max_pilhas = 0
+    pior_inicio = 0
+    for i in range(len(sequencia) - janela + 1):
+        nmpa_local = NMPA(sequencia[i:i + janela], matPaPe)
+        if nmpa_local > max_pilhas:
+            max_pilhas = nmpa_local
+            pior_inicio = i
 
-    pontuacoes.sort(key=lambda x: x[1], reverse=True)
-    return [v for v, _ in pontuacoes]
+    bloco = sequencia[pior_inicio:pior_inicio + janela]
+    melhor_bloco = bloco.copy()
+    melhor_nmpa = max_pilhas
 
-def bfs_por_similaridade(G, v_inicial, matPaPe):
-    visitados = set([v_inicial])
-    fila = deque([v_inicial])
-    resultado = []
+    for perm in itertools.permutations(bloco):
+        nova_sequencia = sequencia[:pior_inicio] + list(perm) + sequencia[pior_inicio + janela:]
+        novo_nmpa = NMPA(nova_sequencia, matPaPe)
+        if novo_nmpa < melhor_nmpa:
+            melhor_bloco = perm
+            melhor_nmpa = novo_nmpa
 
-    while fila:
-        atual = fila.popleft()
-        resultado.append(atual)
-        vizinhos_ordenados = ordenar_vizinhos_lookahead(G, atual, matPaPe, visitados, profundidade=1)
-        for vizinho in vizinhos_ordenados:
-            visitados.add(vizinho)
-            fila.append(vizinho)
+    return sequencia[:pior_inicio] + list(melhor_bloco) + sequencia[pior_inicio + janela:]
 
-    return resultado
+# ------------------------------
+# Aplica ambos os refinamentos sequencialmente
+# ------------------------------
+def refinamento_hibrido(sequencia, matPaPe):
+    seq = refinamento_diferenciado(sequencia, matPaPe, n_iter=3)
+    if len(seq) > 10:
+        seq = refinamento_hotspots(seq, matPaPe)
+    return seq
 
-def dfs_por_similaridade(G, v_inicial, matPaPe):
-    visitados = set()
-    pilha = [v_inicial]
-    resultado = []
-
-    while pilha:
-        atual = pilha.pop()
-        if atual not in visitados:
-            visitados.add(atual)
-            resultado.append(atual)
-            vizinhos_ordenados = ordenar_vizinhos_lookahead(G, atual, matPaPe, visitados, profundidade=1)
-            pilha.extend(reversed(vizinhos_ordenados))
-
-    return resultado
-
-def refinamento_local_avancado(LP, matPaPe, max_iter=2):
-    from copy import deepcopy
-    LP = deepcopy(LP)
-    melhor_nmpa = NMPA(LP, matPaPe)
-
-    for _ in range(max_iter):
-        melhorou = False
-        for i in range(0, len(LP) - 1, 2):  # reduz combinações
-            for j in range(i + 1, min(i + 5, len(LP))):  # trocas locais
-                LP[i], LP[j] = LP[j], LP[i]
-                novo_nmpa = NMPA(LP, matPaPe)
-                if novo_nmpa < melhor_nmpa:
-                    melhor_nmpa = novo_nmpa
-                    melhorou = True
-                else:
-                    LP[i], LP[j] = LP[j], LP[i]
-        if not melhorou:
-            break
-    return LP
-
-def heuristica_hibrida_avancada(G, matPaPe):
-    visitados = set()
-    seq_final = []
+# ------------------------------
+# Função principal da heurística híbrida adaptativa
+# ------------------------------
+def heuristica_hibrida_completa(G, matPaPe):
+    sequencia_final = []
 
     for componente in nx.connected_components(G):
         subgrafo = G.subgraph(componente)
-        tamanho = len(subgrafo)
-        n_start = min(3, max(1, tamanho // 4))  # menor número de vértices por componente
-        melhor_seq = None
-        melhor_nmpa = float("inf")
 
-        candidatos = random.sample(list(subgrafo.nodes()), min(n_start, tamanho))
+        if len(componente) == 1:
+            sequencia_final.extend(componente)
+            continue
 
-        for v_inicio in candidatos:
-            score_conect = metrica_combinada(subgrafo)
-            score_diversidade = diversidade_pecas(matPaPe, list(subgrafo.nodes()))
-            limiar = 0.25 + 0.05 * np.log10(tamanho + 1)
+        metricas = calcular_metricas_componente(subgrafo, matPaPe)
+        no_inicial = selecionar_no_inicial(subgrafo, matPaPe)
 
-            if score_diversidade < 2.5:
-                score_conect += 0.1
+        # Escolhe a estratégia com base na densidade
+        if metricas['densidade'] > 0.6:
+            sequencia = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=2)
+        elif metricas['densidade'] >= 0.3:
+            sequencia = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=3)
+        else:
+            visitados = set()
+            sequencia = dfs_limitado(subgrafo, no_inicial, visitados, matPaPe, limite=3)
 
-            if score_conect >= limiar:
-                seq = bfs_por_similaridade(subgrafo, v_inicio, matPaPe)
-            else:
-                seq = dfs_por_similaridade(subgrafo, v_inicio, matPaPe)
+        sequencia_final.extend(sequencia)
 
-            nmpa = NMPA(seq, matPaPe)
-            if nmpa < melhor_nmpa:
-                melhor_seq = seq
-                melhor_nmpa = nmpa
-
-        seq_final.extend(melhor_seq)
-        visitados.update(melhor_seq)
-
-    # Só refina se o NMPA for alto
-    if NMPA(seq_final, matPaPe) >= 6:
-        return refinamento_local_avancado(seq_final, matPaPe)
-    return seq_final
+    # Aplica refinamento final na sequência global
+    return refinamento_hibrido(sequencia_final, matPaPe)
