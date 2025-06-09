@@ -39,6 +39,7 @@ def gerar_grafico_barras(csv_path, salvar_em="resultados/grafico_barras.png"):
         "NMPA_Hibrida",
         "NMPA_Comunidades",
         "NMPA_Pico",
+        "NMPA_Componentes",
         "NMPA_Aleatoria"
     ]
 
@@ -48,6 +49,7 @@ def gerar_grafico_barras(csv_path, salvar_em="resultados/grafico_barras.png"):
         "#FFC0CB", # Rosa para heurística híbrida
         "#FF69B4", # Rosa mais forte para heurística de comunidades
         "#32CD32", # Verde para heurística de pico
+        "#FFFF00", # Amarelo para heurística por componentes
         "#A9A9A9"  # Cinza para heurística aleatória
     ]
 

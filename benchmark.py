@@ -35,6 +35,7 @@ from mosp.heuristicas import (
     heuristica_hibrida_adaptativa,
     heuristica_comunidades_adaptativa,
     heuristica_hibrida_adaptativa_pico,
+    heuristica_hibrida_por_componente,
     aleatoria
 )
 
@@ -74,6 +75,7 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs):
             ordem_hibrida, log_hibrida = heuristica_hibrida_adaptativa(grafo, limiar_densidade=0.3)
             ordem_comunidades, log_comunidades = heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3)
             ordem_pico, log_pico = heuristica_hibrida_adaptativa_pico(grafo, matriz)
+            ordem_por_componente = heuristica_hibrida_por_componente(grafo,matriz)
 
             ordem_aleatoria = aleatoria(grafo)
 
@@ -83,6 +85,7 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs):
             nmpa_hibrida = calcular_nmpa(ordem_hibrida, matriz)
             nmpa_comunidades = calcular_nmpa(ordem_comunidades, matriz)
             nmpa_pico = calcular_nmpa(ordem_pico, matriz)
+            nmpa_por_componente =calcular_nmpa(ordem_por_componente,matriz)
             nmpa_aleatoria = calcular_nmpa(ordem_aleatoria, matriz)
 
             # 6. Armazenar resultados gerais
@@ -93,6 +96,7 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs):
                 "NMPA_Hibrida": nmpa_hibrida,
                 "NMPA_Comunidades": nmpa_comunidades,
                 "NMPA_Pico": nmpa_pico,
+                "NMPA_Componentes": nmpa_por_componente,
                 "NMPA_Aleatoria": nmpa_aleatoria
             })
 
@@ -110,7 +114,7 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs):
     os.makedirs(os.path.dirname(caminho_saida_csv), exist_ok=True)
     with open(caminho_saida_csv, mode='w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=[
-            "Instancia", "NMPA_BFS", "NMPA_DFS", "NMPA_Hibrida", "NMPA_Comunidades", "NMPA_Pico", "NMPA_Aleatoria"
+            "Instancia", "NMPA_BFS", "NMPA_DFS", "NMPA_Hibrida", "NMPA_Comunidades", "NMPA_Pico","NMPA_Componentes", "NMPA_Aleatoria"
         ])
         writer.writeheader()
         writer.writerows(resultados)
