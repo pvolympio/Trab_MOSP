@@ -1,30 +1,45 @@
-import numpy as np
-import networkx as nx
-import DFS
-from calculoPilhas import criaMatPadraoPeca, NMPA, construir_grafo,heuristica_hibrida_completa
-import BFS
+"""
+Arquivo para testar uma única instância do problema MOSP.
+
+Fluxo:
+    - Lê uma instância específica
+    - Constrói o grafo padrão-padrão
+    - Aplica a heurística híbrida
+    - Calcula o NMPA
+    - Exibe os resultados no console
+
+Como rodar:
+    python main.py
+"""
+
+from mosp.leitura_instancia import criar_matriz_padroes_pecas
+from mosp.grafo import construir_grafo
+from mosp.custo_nmpa import calcular_nmpa
+from mosp.heuristicas import heuristica_hibrida_adaptativa
 
 def main():
     # Nome da instância (sem .txt)
-    nome_instancia = "cenarios\Cenário 3 - 10 - Random-400-400-4-1"
+    nome_instancia = "Cenário 3 - 1 - exemplo"
+    caminho_instancia = f"cenarios/{nome_instancia}.txt"
 
-    # 1. Ler a matriz padrões x peças
-    matPaPe = criaMatPadraoPeca(nome_instancia)
+    # 1. Ler a matriz padrão × peça
+    matriz = criar_matriz_padroes_pecas(caminho_instancia)
 
-    G = construir_grafo(matPaPe)
-    LP = heuristica_hibrida_completa(G, matPaPe)
+    # 2. Construir o grafo padrão-padrão
+    grafo = construir_grafo(matriz)
 
+    # 3. Aplicar heurística híbrida
+    ordem = heuristica_hibrida_adaptativa(grafo,matriz)
 
-    # 4. Calcular o NMPA
-    resultado = NMPA(LP, matPaPe)
+    # 4. Calcular NMPA
+    nmpa = calcular_nmpa(ordem, matriz)
 
-    # 5. Exibir os resultados
+    # 5. Exibir resultados
     print("-" * 50)
     print(f"Instância: {nome_instancia}")
-    print(f"Sequência de padrões (LP): {LP}")
-    print(f"NMPA (Número Máximo de Pilhas Abertas): {resultado}")
+    print(f"Ordem gerada pela heurística híbrida: {ordem}")
+    print(f"NMPA (Número Máximo de Pilhas Abertas): {nmpa}")
     print("-" * 50)
 
-    
 if __name__ == "__main__":
     main()

@@ -1,0 +1,10 @@
+0000000000000000000000000000000000000000 3ee15b4ddd409ec30799573eb678b3c749d56bac pvolympio <pvolympio@gmail.com> 1748407489 -0300	commit (initial): add bfs
+3ee15b4ddd409ec30799573eb678b3c749d56bac 3ee15b4ddd409ec30799573eb678b3c749d56bac pvolympio <pvolympio@gmail.com> 1748407528 -0300	Branch: renamed refs/heads/main to refs/heads/main
+3ee15b4ddd409ec30799573eb678b3c749d56bac 2b49bcf8522309d05dcb539e10fefb4b0306b793 pvolympio <pvolympio@gmail.com> 1748408767 -0300	commit: ajustando arquivos
+2b49bcf8522309d05dcb539e10fefb4b0306b793 b65966b131ace1e46612d2b90d512089501d05dd pvolympio <pvolympio@gmail.com> 1748449666 -0300	commit: arquivo main
+b65966b131ace1e46612d2b90d512089501d05dd 31dbbe126352f9c59c312426ee73bb233bf3ad3c pvolympio <pvolympio@gmail.com> 1748804153 -0300	commit: funções de calculo de pilha e datasets
+31dbbe126352f9c59c312426ee73bb233bf3ad3c c84c274c01584f9875981c38c5b06ea3fd423023 pvolympio <pvolympio@gmail.com> 1748815865 -0300	commit: ajustes
+c84c274c01584f9875981c38c5b06ea3fd423023 a1478ff521fcfff6232f49a5eb12afa5d7c3b233 pvolympio <pvolympio@gmail.com> 1748919884 -0300	commit: adição das funções feitas na outra branch
+a1478ff521fcfff6232f49a5eb12afa5d7c3b233 cc3156eb1741c27a1108b83321795861bcaeb7ea pvolympio <pvolympio@gmail.com> 1748994903 -0300	commit: implementação do benchmark
+cc3156eb1741c27a1108b83321795861bcaeb7ea 3491defaaf3ee4b4a604ee2926b108d5262f26d1 pvolympio <pvolympio@gmail.com> 1749001451 -0300	commit: função geradora de grafico
+3491defaaf3ee4b4a604ee2926b108d5262f26d1 e47ec1e56452ee8762794b6374ea89ae095087a6 pvolympio <pvolympio@gmail.com> 1749427148 -0300	pull origin main: Fast-forward

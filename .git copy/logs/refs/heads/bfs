@@ -1,0 +1,10 @@
+0000000000000000000000000000000000000000 3ee15b4ddd409ec30799573eb678b3c749d56bac pvolympio <pvolympio@gmail.com> 1748407817 -0300	branch: Created from HEAD
+3ee15b4ddd409ec30799573eb678b3c749d56bac b65966b131ace1e46612d2b90d512089501d05dd pvolympio <pvolympio@gmail.com> 1748450201 -0300	pull origin main: Fast-forward
+b65966b131ace1e46612d2b90d512089501d05dd e5dfd699cb7e95aeea35d823a51eaf9eab525ada pvolympio <pvolympio@gmail.com> 1748450542 -0300	commit: codigos iniciais das buscas
+e5dfd699cb7e95aeea35d823a51eaf9eab525ada e46824dbe04ae6b653adc1505dfc3d402f1e7d15 pvolympio <pvolympio@gmail.com> 1748815716 -0300	commit (merge): ajustes
+e46824dbe04ae6b653adc1505dfc3d402f1e7d15 d83656db03f8e9a3ace53171912b3d42b4f31731 pvolympio <pvolympio@gmail.com> 1748820898 -0300	commit: construção do grafo
+d83656db03f8e9a3ace53171912b3d42b4f31731 50f16370afd7b681d3a573c896cbe8e34a615b7f pvolympio <pvolympio@gmail.com> 1748888626 -0300	commit: função da heusristica hibrida e main
+50f16370afd7b681d3a573c896cbe8e34a615b7f a7005aeb68cca47ce360b37ad604242c332fc6b4 pvolympio <pvolympio@gmail.com> 1748919130 -0300	commit: ajustes main
+a7005aeb68cca47ce360b37ad604242c332fc6b4 48aed48f2393de6b9ab9eb74296e5cffb5088540 pvolympio <pvolympio@gmail.com> 1749069054 -0300	commit: mudando para testes na minha main
+48aed48f2393de6b9ab9eb74296e5cffb5088540 cf2851d84063e4f34aba20a218bd08831e45981b pvolympio <pvolympio@gmail.com> 1749265159 -0300	commit: melhorias na euristica hibrida
+cf2851d84063e4f34aba20a218bd08831e45981b e991830856f767c1cf7c789c2ca2a6b61c80c2b6 pvolympio <pvolympio@gmail.com> 1749425721 -0300	commit: melhorias importantes no codigo, esta bem comentado no proprio

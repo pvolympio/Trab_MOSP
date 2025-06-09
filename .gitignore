@@ -1,0 +1,8 @@
+# Ignora arquivos compilados pelo Python (bytecode)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Possíveis arquivos do Mac
+.DS_Store
