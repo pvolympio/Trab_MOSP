@@ -4,6 +4,7 @@ Este arquivo contém a função de Busca em Profundidade (DFS) para percorrer o 
 Descrição:
     - Dada uma lista de adjacência e um vértice inicial, a função gera uma ordem de visitação dos padrões (vértices) utilizando o algoritmo DFS (versão iterativa).
     - A função inclui um mecanismo para garantir que todos os padrões sejam incluídos na ordem final, mesmo que o grafo tenha componentes desconexas (caso existam padrões que não compartilham peças com nenhum outro padrão). Isso é necessário porque o MOSP exige que todos os padrões sejam produzidos.
+    - Além disso, a função foi ajustada para ser totalmente compatível com subgrafos (por exemplo, nas comunidades detectadas por 'heuristica_comunidades_adaptativa'), em que os vértices podem não ser numerados de 0 a N-1.
 
 Uso no projeto:
     - A DFS gera uma ordem de produção inicial que será avaliada com a função de custo (NMPA).
@@ -19,7 +20,9 @@ Exemplo de uso:
 
 def dfs(lista_adjacencia, vertice_inicial):
     """
-    Executa a Busca em Profundidade (DFS) no grafo padrão-padrão.
+    Executa a Busca em Profundidade (DFS) no grafo padrão-padrão ou subgrafo.
+
+    Compatível com subgrafos (ex: comunidades detectadas).
 
     Args:
         lista_adjacencia: Dicionário {vértice: lista de vizinhos}.
@@ -30,8 +33,9 @@ def dfs(lista_adjacencia, vertice_inicial):
                Se o grafo tiver componentes desconexas, os padrões isolados ou de outras componentes
                serão adicionados ao final da ordem.
     """
-    num_vertices = len(lista_adjacencia)
-    todos_vertices = list(range(num_vertices))
+    # Correção: pegar os vértices reais, não um range de 0 até N-1
+    todos_vertices = list(lista_adjacencia.keys())
+
     visitados = []
     pilha = [vertice_inicial]
 

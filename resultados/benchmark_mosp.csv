@@ -1,12 +1,12 @@
-Instancia,NMPA_BFS,NMPA_DFS,NMPA_Hibrida,NMPA_Aleatoria
-Cenário 3 - 4 - scoop-A_FA+AA-_12,16,17,16,19
-Cenário 3 - 9 - Random-150-150-6-1,124,137,134,136
-Cenário 3 - 6 - scoop-B_22X18_50,10,10,10,11
-Cenário 3 - 11 - Random-1000-1000-8-5,907,969,907,968
-Cenário 3 - 10 - Random-400-400-4-1,251,290,258,319
-Cenário 3 - 5 - scoop-A_FA+AA-_13,27,30,28,38
-Cenário 3 - 3 - p4050n10,26,32,26,33
-Cenário 3 - 1 - exemplo,8,8,8,8
-Cenário 3 - 2 - Miller,16,20,16,20
-Cenário 3 - 8 - Random-100-50-4-3,38,49,48,53
-Cenário 3 - 7 - Random-30-30-6-2,25,28,28,29
+Instancia,NMPA_BFS,NMPA_DFS,NMPA_Hibrida,NMPA_Comunidades,NMPA_Pico,NMPA_Aleatoria
+Cenário 3 - 4 - scoop-A_FA+AA-_12,16,17,16,14,16,18
+Cenário 3 - 9 - Random-150-150-6-1,124,137,134,121,124,140
+Cenário 3 - 6 - scoop-B_22X18_50,10,10,10,10,10,12
+Cenário 3 - 11 - Random-1000-1000-8-5,907,969,907,923,907,983
+Cenário 3 - 10 - Random-400-400-4-1,251,290,258,239,251,290
+Cenário 3 - 5 - scoop-A_FA+AA-_13,27,30,28,26,27,36
+Cenário 3 - 3 - p4050n10,26,32,26,27,26,31
+Cenário 3 - 1 - exemplo,8,8,8,5,8,8
+Cenário 3 - 2 - Miller,16,20,16,16,16,20
+Cenário 3 - 8 - Random-100-50-4-3,38,49,48,40,38,54
+Cenário 3 - 7 - Random-30-30-6-2,25,28,28,25,25,26
