@@ -28,7 +28,7 @@ from mosp.busca_dfs import dfs
 
 def main():
     # Nome da instância (sem .txt)
-    nome_instancia = "Cenario_3-1-exemplo"
+    nome_instancia = "cenario1"
     caminho_instancia = f"cenarios/{nome_instancia}.txt"
 
     # 1. Ler a matriz padrão × peça
