@@ -268,7 +268,7 @@ def heuristica_hibrida_adaptativa_pico(grafo, matriz, limiar_densidade=0.3):
 def heuristica_hibrida_por_componente(grafo, matPaPe):
    
     """
-    Gera uma ordem de produção utilizando a heurística híbrida adaptativa.
+    Gera uma ordem de produção utilizando a heurística híbrida adaptativa.  
 
     A ideia principal é explorar a estrutura do grafo padrão × padrão (ADRA),
     aplicando estratégias diferentes dependendo da conectividade de cada componente.
