@@ -21,7 +21,8 @@ from mosp.custo_nmpa import calcular_nmpa
 from mosp.heuristicas import (
     heuristica_hibrida_adaptativa,
     heuristica_comunidades_adaptativa,
-    heuristica_hibrida_adaptativa_pico
+    heuristica_hibrida_adaptativa_pico,
+    heuristica_hibrida_por_componente
 )
 from mosp.busca_bfs import bfs
 from mosp.busca_dfs import dfs
@@ -39,11 +40,14 @@ def main():
     lista_adjacencia = {v: list(grafo.neighbors(v)) for v in grafo.nodes()}
 
     # 3. SELECIONE A HEURÍSTICA OU BUSCA AQUI
-    heuristica = "pico"  # "hibrida", "comunidades", "pico", "bfs", "dfs"
+    heuristica = "pico"  # "hibrida", "comunidades", "pico", "bfs", "dfs", "componentes"
 
     if heuristica == "hibrida":
         ordem, log_execucao = heuristica_hibrida_adaptativa(grafo, limiar_densidade=0.3)
         nome_arquivo_log = f"log_hibrida_{nome_instancia}.csv"
+
+    elif heuristica == "componentes":
+        ordem = heuristica_hibrida_por_componente(grafo,matriz)
 
     elif heuristica == "comunidades":
         ordem, log_execucao = heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3)
