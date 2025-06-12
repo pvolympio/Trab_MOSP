@@ -26,9 +26,10 @@ Exemplo de uso:
 
 import networkx as nx
 import random
+import numpy as np
 from mosp.busca_bfs import bfs, bfs_adaptativo
 from mosp.busca_dfs import dfs,dfs_limitado
-from mosp.metricas_heuristicas import calcular_metricas_componente,refinamento_hibrido,selecionar_no_inicial
+from mosp.metricas_heuristicas import calcular_metricas_componente,refinamento_hibrido,selecionar_multiplos_nos_iniciais
 from mosp.custo_nmpa import calcular_nmpa
 from networkx.algorithms.community import greedy_modularity_communities
 
@@ -265,72 +266,59 @@ def heuristica_hibrida_adaptativa_pico(grafo, matriz, limiar_densidade=0.3):
 
     return ordem_final, log_execucao
 
+
+
+
 def heuristica_hibrida_por_componente(grafo, matPaPe):
-   
-    """
-    Gera uma ordem de produção utilizando a heurística híbrida adaptativa.  
-
-    A ideia principal é explorar a estrutura do grafo padrão × padrão (ADRA),
-    aplicando estratégias diferentes dependendo da conectividade de cada componente.
-
-    - Em componentes densos: usa-se BFS (exploração em largura) para aproveitar peças compartilhadas.
-    - Em componentes esparsos: usa-se DFS (exploração em profundidade) para fechar pilhas rapidamente.
-    - Em componentes moderados: aplica-se BFS com profundidade maior para equilibrar ambos os efeitos.
-
-    Ao final, um refinamento é aplicado para tentar reduzir ainda mais o número máximo de pilhas abertas (NMPA).
-
-    Args:
-        G (nx.Graph): grafo padrão × padrão com arestas indicando peças compartilhadas entre padrões.
-        matPaPe (np.ndarray): matriz binária padrão × peça.
-
-    Returns:
-        list: sequência final de padrões que minimiza as pilhas abertas ao longo da produção.
-    """
     log_execucao = []
-    sequencia_final = []  # Lista que irá conter a ordem global final de execução dos padrões
+    sequencia_final = []
 
-    # Percorre cada componente conectado do grafo
     for componente in nx.connected_components(grafo):
-        subgrafo = grafo.subgraph(componente)  # Cria o subgrafo apenas com os nós do componente atual
+        subgrafo = grafo.subgraph(componente)
 
-        # Caso o componente tenha apenas um padrão, já adiciona direto à sequência
         if len(componente) == 1:
             sequencia_final.extend(componente)
             continue
 
-        # Calcula métricas como densidade e diversidade do componente
         metricas = calcular_metricas_componente(subgrafo, matPaPe)
+        
+        # Número adaptativo de nós iniciais (até 5)
+        n_candidatos = min(1 + len(componente)//10, 5)
+        nos_iniciais = selecionar_multiplos_nos_iniciais(subgrafo, matPaPe, k=n_candidatos)
 
-        # Seleciona o padrão inicial de forma inteligente, considerando peças críticas e conectividade
-        no_inicial = selecionar_no_inicial(subgrafo, matPaPe)
+        melhor_seq = None
+        melhor_nmpa = float('inf')
+        melhor_busca = None
 
-        # Aplica a estratégia de travessia de acordo com a densidade do subgrafo
-        if metricas['densidade'] > 0.6:
-            # Componente denso → BFS com menor profundidade (evita explosão de pilhas)
-            sequencia = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=2)
-            tipo_busca = "BFS"
-        elif metricas['densidade'] >= 0.3:
-            # Componente moderado → BFS mais profundo (mistura de exploração e fechamento)
-            sequencia = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=3)
-            tipo_busca = "BFS"
-        else:
-            # Componente esparso → DFS limitada, ideal para fechar pilhas rapidamente
-            visitados = set()
-            sequencia = dfs_limitado(subgrafo, no_inicial, visitados, matPaPe, limite=3)
-            tipo_busca = "DFS"
+        for no_inicial in nos_iniciais:
+            if metricas['densidade'] > 0.6:
+                seq = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=2)
+                tipo_busca = "BFS"
+            elif metricas['densidade'] >= 0.3:
+                seq = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=3)
+                tipo_busca = "BFS"
+            else:
+                visitados = set()
+                seq = dfs_limitado(subgrafo, no_inicial, visitados, matPaPe, limite=3)
+                tipo_busca = "DFS"
 
-        for padrao in sequencia:
-            log_execucao.append({"Padrão":padrao,
-                                 "Densidade":metricas["densidade"],
-                                 "Busca":tipo_busca
+            nmpa = calcular_nmpa(seq, matPaPe)
 
-                                 })
+            if nmpa < melhor_nmpa:
+                melhor_seq = seq
+                melhor_nmpa = nmpa
+                melhor_busca = tipo_busca
 
-        # Junta a sequência local ao resultado final
-        sequencia_final.extend(sequencia)
+        sequencia_final.extend(melhor_seq)
+        for padrao in melhor_seq:
+            log_execucao.append({
+                "Padrão": padrao,
+                "Densidade": metricas["densidade"],
+                "Busca": melhor_busca
+            })
 
-    # Aplica um refinamento global final na sequência completa (melhora o NMPA)
-    return refinamento_hibrido(sequencia_final, matPaPe),log_execucao
+    return refinamento_hibrido(sequencia_final, matPaPe), log_execucao
+
 
 
 def aleatoria(grafo):

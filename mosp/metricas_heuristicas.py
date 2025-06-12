@@ -46,7 +46,21 @@ def calcular_metricas_componente(subgrafo, matPaPe):
         'diversidade': diversidade
     }
 
+def selecionar_multiplos_nos_iniciais(subgrafo, matPaPe, k=3):
+    nos = list(subgrafo.nodes())
+    pecas_componente = np.sum(matPaPe[nos], axis=0)
+    pecas_criticas = np.argsort(-pecas_componente)[:3]
 
+    scores = []
+    for no in nos:
+        grau = subgrafo.degree(no)
+        peso_pecas_criticas = np.sum(matPaPe[no][pecas_criticas])
+        penalidade_pecas = 0.2 * np.sum(matPaPe[no])
+        score = (0.4 * grau + 0.5 * peso_pecas_criticas - penalidade_pecas)
+        scores.append((no, score))
+
+    scores.sort(key=lambda x: -x[1])  # Ordena por score decrescente
+    return [no for no, _ in scores[:k]]
 # Seleciona o nó inicial com base em critérios de conectividade e criticidade de peças
 # ------------------------------
 def selecionar_no_inicial(subgrafo, matPaPe):
