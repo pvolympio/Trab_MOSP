@@ -47,7 +47,8 @@ def main():
         nome_arquivo_log = f"log_hibrida_{nome_instancia}.csv"
 
     elif heuristica == "componentes":
-        ordem = heuristica_hibrida_por_componente(grafo,matriz)
+        ordem, log_execucao = heuristica_hibrida_por_componente(grafo,matriz)
+        nome_arquivo_log =  f"log_componentes_{nome_instancia}.csv"
 
     elif heuristica == "comunidades":
         ordem, log_execucao = heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3)

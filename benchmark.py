@@ -91,7 +91,7 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs, caminho_
             tempo_pico = round(time.perf_counter() - inicio, 4)
 
             inicio = time.perf_counter()
-            ordem_por_componente = heuristica_hibrida_por_componente(grafo, matriz)
+            ordem_por_componente,log_componentes = heuristica_hibrida_por_componente(grafo, matriz)
             tempo_componentes = round(time.perf_counter() - inicio, 4)
 
             inicio = time.perf_counter()
@@ -136,6 +136,9 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs, caminho_
 
             df_log_pico = pd.DataFrame(log_pico)
             df_log_pico.to_csv(os.path.join(pasta_logs, f"log_hibrida_pico_{nome_instancia}.csv"), index=False)
+
+            df_log_componentes = pd.DataFrame(log_componentes)
+            df_log_componentes.to_csv(os.path.join(pasta_logs, f"log_hibrida_componentes_{nome_instancia}.csv"), index=False)
 
     os.makedirs(os.path.dirname(caminho_saida_csv), exist_ok=True)
     with open(caminho_saida_csv, mode='w', newline='') as f:

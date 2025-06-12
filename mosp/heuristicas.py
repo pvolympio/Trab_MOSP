@@ -286,6 +286,7 @@ def heuristica_hibrida_por_componente(grafo, matPaPe):
     Returns:
         list: sequência final de padrões que minimiza as pilhas abertas ao longo da produção.
     """
+    log_execucao = []
     sequencia_final = []  # Lista que irá conter a ordem global final de execução dos padrões
 
     # Percorre cada componente conectado do grafo
@@ -307,19 +308,29 @@ def heuristica_hibrida_por_componente(grafo, matPaPe):
         if metricas['densidade'] > 0.6:
             # Componente denso → BFS com menor profundidade (evita explosão de pilhas)
             sequencia = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=2)
+            tipo_busca = "BFS"
         elif metricas['densidade'] >= 0.3:
             # Componente moderado → BFS mais profundo (mistura de exploração e fechamento)
             sequencia = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=3)
+            tipo_busca = "BFS"
         else:
             # Componente esparso → DFS limitada, ideal para fechar pilhas rapidamente
             visitados = set()
             sequencia = dfs_limitado(subgrafo, no_inicial, visitados, matPaPe, limite=3)
+            tipo_busca = "DFS"
+
+        for padrao in sequencia:
+            log_execucao.append({"Padrão":padrao,
+                                 "Densidade":metricas["densidade"],
+                                 "Busca":tipo_busca
+
+                                 })
 
         # Junta a sequência local ao resultado final
         sequencia_final.extend(sequencia)
 
     # Aplica um refinamento global final na sequência completa (melhora o NMPA)
-    return refinamento_hibrido(sequencia_final, matPaPe)
+    return refinamento_hibrido(sequencia_final, matPaPe),log_execucao
 
 
 def aleatoria(grafo):
