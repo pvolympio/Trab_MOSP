@@ -270,7 +270,23 @@ def heuristica_hibrida_adaptativa_pico(grafo, matriz, limiar_densidade=0.3):
 
 
 def heuristica_hibrida_por_componente(grafo, matPaPe):
-    
+    """
+    Heurística híbrida BFS/DFS adaptativa por componente conexo do grafo.
+
+    Estratégia:
+    - Divide o grafo em componentes conexos.
+    - Aplica uma heurística adaptativa em cada componente:
+        * BFS se densidade > 0.4
+        * DFS se densidade <= 0.4
+    - Usa múltiplos nós iniciais para cada componente (multi-start).
+    - Aplica refinamento local ao final.
+
+    Racional:
+    - A abordagem por componente melhora a escalabilidade.
+    - A escolha BFS/DFS adaptativa melhora a qualidade da solução.
+    - O log é construído por padrão individual (1 linha por padrão) para
+      facilitar análise e visualização em CSV.
+    """
     sequencia_final = []
     log_execucao = []
 
@@ -282,6 +298,7 @@ def heuristica_hibrida_por_componente(grafo, matPaPe):
         tamanho = len(componente)
         densidade = nx.density(subgrafo)
 
+        # Caso trivial: componente com 1 nó
         if tamanho == 1:
             no = next(iter(componente))
             sequencia_final.append(no)
@@ -293,6 +310,7 @@ def heuristica_hibrida_por_componente(grafo, matPaPe):
             })
             continue
 
+        # Caso pequeno: ordenação rápida
         elif tamanho <= 5:
             seq = ordenacao_rapida(subgrafo, matPaPe)
             sequencia_final.extend(seq)
@@ -304,6 +322,7 @@ def heuristica_hibrida_por_componente(grafo, matPaPe):
             })
             continue
 
+        # Multi-start: testa vários nós iniciais
         nos_iniciais = melhores_nos_iniciais(subgrafo, matPaPe, top_k=3)
         melhores_seqs = []
 
@@ -318,21 +337,24 @@ def heuristica_hibrida_por_componente(grafo, matPaPe):
             nmpa_seq = calcular_nmpa(sequencia_final + seq, matPaPe)
             melhores_seqs.append((nmpa_seq, seq, tipo_busca))
 
+        # Seleciona a melhor sequência entre as 3 testadas
         melhores_seqs.sort(key=lambda x: x[0])
         melhor_nmpa, melhor_seq, tipo_busca = melhores_seqs[0]
 
+        # Adiciona a sequência à final
         sequencia_final.extend(melhor_seq)
+
+        # Log linha a linha (um padrão por linha no CSV)
         for padrao in melhor_seq:
             log_execucao.append({
-            "Padrao": padrao,
-            "Busca": tipo_busca,
-            "DensidadeRegiao": densidade,
-            "NMPA_Parcial": melhor_nmpa
-        })
+                "Padrao": padrao,
+                "Busca": tipo_busca,
+                "DensidadeRegiao": densidade,
+                "NMPA_Parcial": melhor_nmpa
+            })
 
-
+    # Aplica refinamento final na sequência montada
     return refinamento_minimo(sequencia_final, matPaPe, modo="padrao"), log_execucao
-
 
 
 

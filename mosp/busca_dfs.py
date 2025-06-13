@@ -68,10 +68,24 @@ def dfs(lista_adjacencia, vertice_inicial):
     return visitados
 
 def dfs_adaptado(subgrafo, no_inicial, matPaPe, limite=2):
+    """
+    Executa uma busca em profundidade (DFS) otimizada com profundidade limitada.
+
+    Ideia central:
+    - A DFS tradicional segue o caminho até onde puder antes de voltar.
+    - Aqui, impomos um limite de profundidade (parâmetro `limite`), evitando que a busca se aprofunde demais.
+    - Os vizinhos são ordenados com base em similaridade com o nó atual, favorecendo caminhos "tematicamente coesos".
+
    
-    pilha = [(no_inicial, 0)]
-    visitados = set()
-    sequencia = []
+
+    Racional do limite:
+    - Limitar a profundidade evita que a DFS vá longe demais em caminhos ruins.
+    - Um limite pequeno (ex: 2) já oferece controle e evita explorações "exageradas".
+    """
+
+    pilha = [(no_inicial, 0)]          # Pilha para DFS (estrutura LIFO), armazenando também a profundidade atual
+    visitados = set()                  # Conjunto de nós já visitados
+    sequencia = []                     # Sequência final de visitação
 
     while pilha:
         no_atual, profundidade = pilha.pop()
@@ -80,11 +94,16 @@ def dfs_adaptado(subgrafo, no_inicial, matPaPe, limite=2):
             sequencia.append(no_atual)
 
             if profundidade < limite:
+                # Seleciona vizinhos ainda não visitados
                 vizinhos = [v for v in subgrafo.neighbors(no_atual) if v not in visitados]
                 if vizinhos:
+                    # Similaridade entre o nó atual e os vizinhos
                     similaridades = np.sum(matPaPe[no_atual] & matPaPe[vizinhos], axis=1)
+
+                    # Ordena vizinhos pela similaridade decrescente (mais parecidos primeiro)
                     ordenados = [v for _, v in sorted(zip(similaridades, vizinhos), reverse=True)]
+
+                    # Adiciona os vizinhos à pilha com profundidade incrementada (reversed para manter ordem no LIFO)
                     pilha.extend((v, profundidade + 1) for v in reversed(ordenados))
 
     return sequencia
-    

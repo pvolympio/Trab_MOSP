@@ -69,23 +69,44 @@ def bfs(lista_adjacencia, vertice_inicial):
     return ordem
 
 def bfs_adaptado(subgrafo, no_inicial, matPaPe):
+    """
+    Executa uma busca em largura (BFS) otimizada para grafos densos.
+
+    Ideia central:
+    - A BFS tradicional expande os vértices em ondas (nível por nível).
+    - Nesta versão, os vizinhos são ordenados com base em uma combinação ponderada:
+        * Grau do nó (quantidade de conexões): 60%
+        * Similaridade de peças (quantas peças em comum com o nó atual): 40%
+
     
-    visitados = set()
-    fila = deque([no_inicial])
-    sequencia = []
+    - A BFS explora os vizinhos próximos antes de se afastar, mantendo grupos de vértices "relacionados" mais unidos na sequência.
+    - Isso reduz o risco de abrir pilhas novas cedo demais, favorecendo a minimização do NMPA no MOSP.
+    """
+
+    visitados = set()                   # Conjunto de nós já visitados
+    fila = deque([no_inicial])         # Fila para BFS (estrutura FIFO)
+    sequencia = []                     # Sequência final de visitação
 
     while fila:
-        no_atual = fila.popleft()
+        no_atual = fila.popleft()      # Pega o próximo da fila
         if no_atual not in visitados:
             visitados.add(no_atual)
             sequencia.append(no_atual)
 
+            # Seleciona vizinhos ainda não visitados
             vizinhos = [v for v in subgrafo.neighbors(no_atual) if v not in visitados]
             if vizinhos:
+                # Calcula o grau e a similaridade com o nó atual
                 graus = np.array([subgrafo.degree(v) for v in vizinhos])
                 similaridades = np.sum(matPaPe[no_atual] & matPaPe[vizinhos], axis=1)
+
+                # Combinação ponderada entre grau e similaridade
                 pesos = 0.6 * graus + 0.4 * similaridades
+
+                # Ordena os vizinhos com base nesses pesos (prioriza mais conectados e mais semelhantes)
                 ordenados = [v for _, v in sorted(zip(pesos, vizinhos), reverse=True)]
+
+                # Adiciona os vizinhos ordenados à fila
                 fila.extend(ordenados)
 
     return sequencia
