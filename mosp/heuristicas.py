@@ -27,9 +27,9 @@ Exemplo de uso:
 import networkx as nx
 import random
 import numpy as np
-from mosp.busca_bfs import bfs, bfs_adaptativo
-from mosp.busca_dfs import dfs,dfs_limitado
-from mosp.metricas_heuristicas import calcular_metricas_componente,refinamento_hibrido,selecionar_multiplos_nos_iniciais
+from mosp.busca_bfs import bfs, bfs_adaptado
+from mosp.busca_dfs import dfs,dfs_adaptado
+from mosp.metricas_heuristicas import ordenacao_rapida, refinamento_minimo, melhores_nos_iniciais
 from mosp.custo_nmpa import calcular_nmpa
 from networkx.algorithms.community import greedy_modularity_communities
 
@@ -270,54 +270,69 @@ def heuristica_hibrida_adaptativa_pico(grafo, matriz, limiar_densidade=0.3):
 
 
 def heuristica_hibrida_por_componente(grafo, matPaPe):
-    log_execucao = []
+    
     sequencia_final = []
+    log_execucao = []
 
     for componente in nx.connected_components(grafo):
-        subgrafo = grafo.subgraph(componente)
-
-        if len(componente) == 1:
-            sequencia_final.extend(componente)
+        if not componente:
             continue
 
-        metricas = calcular_metricas_componente(subgrafo, matPaPe)
-        
-        # Número adaptativo de nós iniciais (até 5)
-        n_candidatos = min(1 + len(componente)//10, 5)
-        nos_iniciais = selecionar_multiplos_nos_iniciais(subgrafo, matPaPe, k=n_candidatos)
+        subgrafo = grafo.subgraph(componente)
+        tamanho = len(componente)
+        densidade = nx.density(subgrafo)
 
-        melhor_seq = None
-        melhor_nmpa = float('inf')
-        melhor_busca = None
+        if tamanho == 1:
+            no = next(iter(componente))
+            sequencia_final.append(no)
+            log_execucao.append({
+                "Padrao": [no],
+                "Busca": "Trivial",
+                "DensidadeRegiao": densidade,
+                "NMPA_Parcial": calcular_nmpa(sequencia_final, matPaPe)
+            })
+            continue
+
+        elif tamanho <= 5:
+            seq = ordenacao_rapida(subgrafo, matPaPe)
+            sequencia_final.extend(seq)
+            log_execucao.append({
+                "Padrao": seq,
+                "Busca": "Ordenacao_Rapida",
+                "DensidadeRegiao": densidade,
+                "NMPA_Parcial": calcular_nmpa(sequencia_final, matPaPe)
+            })
+            continue
+
+        nos_iniciais = melhores_nos_iniciais(subgrafo, matPaPe, top_k=3)
+        melhores_seqs = []
 
         for no_inicial in nos_iniciais:
-            if metricas['densidade'] > 0.6:
-                seq = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=2)
-                tipo_busca = "BFS"
-            elif metricas['densidade'] >= 0.3:
-                seq = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=3)
+            if densidade > 0.4:
+                seq = bfs_adaptado(subgrafo, no_inicial, matPaPe)
                 tipo_busca = "BFS"
             else:
-                visitados = set()
-                seq = dfs_limitado(subgrafo, no_inicial, visitados, matPaPe, limite=3)
+                seq = dfs_adaptado(subgrafo, no_inicial, matPaPe)
                 tipo_busca = "DFS"
 
-            nmpa = calcular_nmpa(seq, matPaPe)
+            nmpa_seq = calcular_nmpa(sequencia_final + seq, matPaPe)
+            melhores_seqs.append((nmpa_seq, seq, tipo_busca))
 
-            if nmpa < melhor_nmpa:
-                melhor_seq = seq
-                melhor_nmpa = nmpa
-                melhor_busca = tipo_busca
+        melhores_seqs.sort(key=lambda x: x[0])
+        melhor_nmpa, melhor_seq, tipo_busca = melhores_seqs[0]
 
         sequencia_final.extend(melhor_seq)
         for padrao in melhor_seq:
             log_execucao.append({
-                "Padrão": padrao,
-                "Densidade": metricas["densidade"],
-                "Busca": melhor_busca
-            })
+            "Padrao": padrao,
+            "Busca": tipo_busca,
+            "DensidadeRegiao": densidade,
+            "NMPA_Parcial": melhor_nmpa
+        })
 
-    return refinamento_hibrido(sequencia_final, matPaPe), log_execucao
+
+    return refinamento_minimo(sequencia_final, matPaPe, modo="padrao"), log_execucao
+
 
 
 
