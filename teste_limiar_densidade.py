@@ -4,24 +4,27 @@
 Este arquivo realiza um teste de sensibilidade para o limiar de densidade das heurísticas adaptativas no problema MOSP.
 
 Motivação:
-    - As heurísticas 'heuristica_hibrida_adaptativa' e 'heuristica_comunidades_adaptativa' utilizam um parâmetro 'limiar_densidade' para decidir quando aplicar BFS ou DFS.
-    - Este teste explora diferentes valores de limiar para analisar como o NMPA varia.
-    - O objetivo é identificar o limiar de densidade que gera as melhores ordens (menor NMPA).
+    - No desenvolvimento deste trabalho, foram testadas inicialmente duas heurísticas adaptativas baseadas em densidade:
+        - heuristica_hibrida_adaptativa: trabalhava com densidade local (vizinhança dos vértices).
+        - heuristica_comunidades_adaptativa: trabalhava com densidade de comunidades formadas no grafo.
+    - Ambas utilizavam o parâmetro 'limiar_densidade' para decidir entre aplicar BFS ou DFS em cada subgrafo.
+    - Este teste de sensibilidade explora diferentes valores de limiar para analisar como o NMPA varia em cada uma dessas abordagens.
+    - Embora atualmente a heuristica_hibrida_adaptativa tenha sido descontinuada no benchmark principal, o teste é mantido aqui para documentação dos experimentos exploratórios conduzidos.
 
 Fluxo:
     - Lê cada instância da pasta "cenarios/"
     - Para cada valor de limiar definido:
-        - Aplica 'heuristica_hibrida_adaptativa'
-        - Aplica 'heuristica_comunidades_adaptativa'
+        - Aplica heuristica_hibrida_adaptativa
+        - Aplica heuristica_comunidades_adaptativa
         - Calcula o NMPA de cada ordem
     - Armazena os resultados em um CSV separado: "resultados/teste_limiar_densidade.csv"
 
 Como rodar:
     python teste_limiar_densidade.py
 
-Notas:
-    - Este teste é exploratório. Os resultados NÃO devem ser misturados com o benchmark final.
-    - Após rodar este teste, o usuário pode escolher o limiar de densidade ótimo para uso no benchmark.py.
+Notas importantes:
+    - Este teste é puramente exploratório e não faz parte do pipeline de benchmark final.
+    - Os resultados ajudam a entender a influência do parâmetro 'limiar_densidade' no comportamento das heurísticas.
 """
 
 import os

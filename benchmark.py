@@ -11,6 +11,7 @@ Fluxo:
         - DFS
         - Heurística comunidades (limiar 0.3)
         - Heurística baseada em pico de NMPA
+        - Heurística baseada em componentes
     - Calcula o NMPA de cada ordem
     - Salva:
         - CSV com os NMPAs gerais (para todas as instâncias)
@@ -31,7 +32,7 @@ from mosp.custo_nmpa import calcular_nmpa
 from mosp.busca_bfs import bfs
 from mosp.busca_dfs import dfs
 from mosp.heuristicas import (
-    heuristica_comunidades_adaptativa,
+    heuristica_hibrida_comunidades,
     heuristica_hibrida_adaptativa_pico,
     heuristica_hibrida_por_componente,
 )
@@ -76,7 +77,7 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs, caminho_
             tempo_dfs = round(time.perf_counter() - inicio, 4)
 
             inicio = time.perf_counter()
-            ordem_comunidades, log_comunidades = heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3)
+            ordem_comunidades, log_comunidades = heuristica_hibrida_comunidades(grafo, limiar_densidade=0.3)
             tempo_comunidades = round(time.perf_counter() - inicio, 4)
 
             inicio = time.perf_counter()

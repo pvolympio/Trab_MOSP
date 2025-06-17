@@ -2,48 +2,50 @@
 Este arquivo contém as heurísticas adaptativas desenvolvidas para gerar ordens de produção no problema MOSP.
 
 Descrição geral:
-    - As heurísticas utilizam a modelagem por grafos para determinar boas sequências de execução dos padrões de corte.
-    - Diferentes estratégias de travessia e priorização são aplicadas, considerando a estrutura de conectividade do grafo e o comportamento dinâmico do número máximo de pilhas abertas (NMPA).
-    - As heurísticas exploram propriedades de densidade local, comunidades, componentes conexos e evolução temporal do NMPA.
+    - As heurísticas utilizam a modelagem por grafos para gerar sequências de produção que buscam minimizar o número máximo de pilhas abertas (NMPA).
+    - Três abordagens principais foram implementadas:
+        - Heurística por comunidades: explora a densidade interna de subestruturas (comunidades) detectadas no grafo.
+        - Heurística adaptativa por pico: adapta dinamicamente a estratégia durante a execução, monitorando o NMPA em tempo real.
+        - Heurística por componentes: combina métricas estruturais, múltiplos nós iniciais e variações adaptadas de BFS e DFS em cada componente conexo.
 
 Uso no projeto:
     - As heurísticas geram ordens de produção que são avaliadas com a função de custo (NMPA).
-    - Servem de base para experimentação e benchmark de desempenho.
+    - Servem de base para o benchmark comparativo de desempenho.
 
 Funções disponíveis:
-    - heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3)
+    - heuristica_hibrida_comunidades(grafo, limiar_densidade=0.3)
     - heuristica_hibrida_adaptativa_pico(grafo, matriz, limiar_densidade=0.3)
     - heuristica_hibrida_por_componente(grafo, matPaPe)
 
 Exemplo de uso:
     from mosp.heuristicas import (
-        heuristica_comunidades_adaptativa,
+        heuristica_hibrida_comunidades,
         heuristica_hibrida_adaptativa_pico,
         heuristica_hibrida_por_componente
     )
 
-    ordem_comunidades = heuristica_comunidades_adaptativa(grafo)
+    ordem_comunidades = heuristica_hibrida_comunidades(grafo)
     ordem_pico = heuristica_hibrida_adaptativa_pico(grafo, matriz)
     ordem_por_componente = heuristica_hibrida_por_componente(grafo, matriz)
 """
 
 import networkx as nx
 import random
-from mosp.busca_bfs import bfs, bfs_adaptativo
-from mosp.busca_dfs import dfs, dfs_limitado
+from mosp.busca_bfs import bfs, bfs_adaptado
+from mosp.busca_dfs import dfs, dfs_adaptado
 from mosp.metricas import calcular_metricas_componente, selecionar_no_inicial
 from mosp.refinamento import refinamento_hibrido
 from mosp.custo_nmpa import calcular_nmpa
 from networkx.algorithms.community import greedy_modularity_communities
 
-def heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3):
+def heuristica_hibrida_comunidades(grafo, limiar_densidade=0.3):
     """
     Gera uma ordem de produção utilizando comunidades (regiões densas).
 
     - Detecta comunidades internas com mais conexões internas do que externas.
     - Em cada comunidade:
-        - Se densidade >= limiar → aplica BFS.
-        - Caso contrário → aplica DFS.
+        - Se densidade >= limiar: aplica BFS.
+        - Caso contrário: aplica DFS.
 
     Args:
         grafo: Objeto nx.Graph.
@@ -57,8 +59,10 @@ def heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3):
     ordem_final = []
     log_execucao = []
 
+    # Detectar comunidades
     comunidades = list(greedy_modularity_communities(grafo))
 
+    # Processar cada comunidade
     for comunidade in comunidades:
         subgrafo = grafo.subgraph(comunidade)
         densidade = nx.density(subgrafo)
@@ -83,6 +87,7 @@ def heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3):
         ordem_final.extend(ordem)
         visitados.update(ordem)
 
+    # Garantir que todos os vértices estejam na ordem (caso alguma parte não detectada em comunidade)
     for vertice in grafo.nodes():
         if vertice not in visitados:
             ordem_final.append(vertice)
@@ -96,28 +101,38 @@ def heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3):
 
 def heuristica_hibrida_adaptativa_pico(grafo, matriz, limiar_densidade=0.3):
     """
-    Gera uma ordem de produção adaptando dinamicamente a estratégia conforme o NMPA parcial.
+    Gera uma ordem de produção utilizando uma heurística híbrida adaptativa baseada na evolução do NMPA.
 
-    - Inicia com DFS.
-    - Monitora o NMPA ao longo da travessia.
-    - Ao atingir o pico (ou janela de pico), troca para BFS.
+    Motivação:
+        - Observou-se que as heurísticas que aplicavam BFS desde o início (baseadas apenas na densidade do grafo) geravam ordens com NMPA muito semelhantes ao BFS puro.
+        - Esta abordagem explora um comportamento mais adaptativo:
+            - Inicia com DFS, que tende a postergar a abertura de pilhas.
+            - Monitora a evolução do NMPA à medida que a sequência é construída.
+            - Quando o NMPA atinge valores próximos do seu pico (ou janela de pico), a estratégia é alterada para BFS, favorecendo o fechamento simultâneo de pilhas restantes.
+
+    Diferenças em relação às heurísticas anteriores:
+        - Enquanto a 'heuristica_hibrida_comunidades' toma a decisão BFS/DFS com base na densidade de cada subestrutura, esta heurística adapta a estratégia dinamicamente com base no comportamento do próprio NMPA durante a execução.
+        - A matriz padrão-peça é necessária para o cálculo contínuo do NMPA.
 
     Args:
-        grafo: Objeto nx.Graph.
-        matriz: Matriz padrão-peça.
-        limiar_densidade: Não utilizado diretamente (mantido por padrão).
+        grafo: Objeto nx.Graph (grafo padrão-padrão).
+        matriz: Matriz padrão-peça (necessária para cálculo do NMPA).
+        limiar_densidade: (opcional) não é utilizado diretamente nesta heurística.
 
     Returns:
-        ordem_final: Lista de padrões.
-        log_execucao: Log detalhado da busca.
+        ordem_final: Lista de padrões (vértices) na ordem gerada.
+        log_execucao: Lista de dicionários com log detalhado da busca (padrão, tipo de busca, NMPA parcial).
     """
+
     visitados = set()
     ordem_final = []
     log_execucao = []
+
     nmpa_parcial = 0
     nmpa_max = 0
-    uso_bfs = False
+    uso_bfs = False # Flag para indicar se já começamos a usar BFS
 
+    # Começa pelo componente principal
     for componente in nx.connected_components(grafo):
         componentes_nao_visitados = [v for v in componente if v not in visitados]
         if not componentes_nao_visitados:
@@ -127,62 +142,85 @@ def heuristica_hibrida_adaptativa_pico(grafo, matriz, limiar_densidade=0.3):
         vertice_inicio = componentes_nao_visitados[0]
         lista_adjacencia = {v: list(subgrafo.neighbors(v)) for v in subgrafo.nodes()}
 
+        # Vamos usar uma lista "agenda" de padrões a explorar
+        # Começamos com DFS (pilha)
         agenda = [vertice_inicio]
         tipo_busca = "DFS"
 
         while agenda:
             if tipo_busca == "DFS":
-                padrao = agenda.pop()
+                padrao = agenda.pop() # Pilha (último elemento)
             else:
-                padrao = agenda.pop(0)
+                padrao = agenda.pop(0) # Fila (primeiro elemento) - vira BFS
 
             if padrao in visitados:
                 continue
 
+            # Marca como visitado e adiciona à ordem
             visitados.add(padrao)
             ordem_final.append(padrao)
 
+            # Atualiza NMPA parcial
             nmpa_parcial = calcular_nmpa(ordem_final, matriz)
+
+            # Atualiza o NMPA máximo observado
             if nmpa_parcial > nmpa_max:
                 nmpa_max = nmpa_parcial
 
+            # Log do passo
             log_execucao.append({
                 "Padrao": padrao,
                 "Busca": tipo_busca,
                 "NMPA_Parcial": nmpa_parcial
             })
 
+            # Se atingimos o pico muda para BFS
+            # Aqui podemos ajustar o critério: ex. muda para BFS quando o NMPA atual >= 95% do NMPA máximo observado até agora
             if not uso_bfs and nmpa_parcial >= nmpa_max * 0.95:
                 tipo_busca = "BFS"
                 uso_bfs = True
 
+            # Adiciona vizinhos não visitados à agenda
             vizinhos = [v for v in lista_adjacencia[padrao] if v not in visitados]
 
             if tipo_busca == "DFS":
-                agenda.extend(vizinhos[::-1])
+                agenda.extend(vizinhos[::-1]) # Para DFS, adiciona na ordem inversa
             else:
-                agenda.extend(vizinhos)
+                agenda.extend(vizinhos) # Para BFS, adiciona no final da fila
 
     return ordem_final, log_execucao
 
 def heuristica_hibrida_por_componente(grafo, matPaPe):
     """
-    Aplica BFS ou DFS em cada componente do grafo, adaptando a profundidade com base em métricas estruturais.
+    Gera uma ordem de produção utilizando uma heurística híbrida adaptativa por componente conexo.
 
-    - Em componentes densos → BFS rasa.
-    - Em componentes moderados → BFS profunda.
-    - Em componentes esparsos → DFS limitada.
+    Motivação:
+        - Aproveita características estruturais específicas de cada componente conectado do grafo padrão-padrão.
+        - Introduz adaptações nas estratégias clássicas de BFS e DFS, considerando:
+            - O grau de conectividade (densidade do componente).
+            - A similaridade entre padrões (compartilhamento de peças).
+            - A criticidade das peças para escolha do nó inicial.
 
-    Ao final, aplica um refinamento sobre a ordem obtida.
+    Estratégia:
+        - Em componentes densos (densidade > 0.6): aplica BFS adaptada com profundidade rasa.
+        - Em componentes moderados (densidade entre 0.3 e 0.6): aplica BFS adaptada com profundidade maior.
+        - Em componentes esparsos (densidade < 0.3): aplica DFS adaptada com limite de profundidade.
+        - Utiliza seleção heurística de nó inicial para cada componente.
+        - Aplica refinamento ao final da sequência global gerada, visando reduzir ainda mais o NMPA.
+
+    Diferença em relação às demais heurísticas:
+        - Esta abordagem atua localmente em cada componente conectado.
+        - Permite estratégias diferenciadas dentro de uma mesma instância, conforme a topologia de cada região do grafo.
+        - Explora versões aprimoradas de BFS e DFS que consideram não apenas conectividade, mas também a estrutura de peças do problema.
 
     Args:
-        grafo: Objeto nx.Graph.
-        matPaPe: Matriz padrão x peça.
+        grafo (nx.Graph): grafo padrão x padrão.
+        matPaPe (np.ndarray): matriz binária padrão x peça.
 
     Returns:
-        ordem_final: Lista de padrões após o refinamento.
-        log_execucao: Log da estratégia adotada por componente.
+        tuple: sequência final de padrões e log detalhado da execução.
     """
+
     log_execucao = []
     sequencia_final = []
 
@@ -197,14 +235,14 @@ def heuristica_hibrida_por_componente(grafo, matPaPe):
         no_inicial = selecionar_no_inicial(subgrafo, matPaPe)
 
         if metricas['densidade'] > 0.6:
-            sequencia = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=2)
+            sequencia = bfs_adaptado(subgrafo, no_inicial, matPaPe, profundidade_max=2)
             tipo_busca = "BFS"
         elif metricas['densidade'] >= 0.3:
-            sequencia = bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=3)
+            sequencia = bfs_adaptado(subgrafo, no_inicial, matPaPe, profundidade_max=3)
             tipo_busca = "BFS"
         else:
             visitados = set()
-            sequencia = dfs_limitado(subgrafo, no_inicial, visitados, matPaPe, limite=3)
+            sequencia = dfs_adaptado(subgrafo, no_inicial, visitados, matPaPe, limite=3)
             tipo_busca = "DFS"
 
         for padrao in sequencia:
