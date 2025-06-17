@@ -31,22 +31,17 @@ Exemplo de uso:
 
 import networkx as nx
 import random
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 import numpy as np
 from mosp.busca_bfs import bfs, bfs_adaptado
 from mosp.busca_dfs import dfs,dfs_adaptado
-from mosp.metricas_heuristicas import ordenacao_rapida, refinamento_minimo, melhores_nos_iniciais
-=======
-from mosp.busca_bfs import bfs, bfs_adaptativo
-from mosp.busca_dfs import dfs, dfs_limitado
-=======
+
+
 from mosp.busca_bfs import bfs, bfs_adaptado
 from mosp.busca_dfs import dfs, dfs_adaptado
->>>>>>> 2b0bd8d089ee1a60b855861e8c552221ee841bbd
-from mosp.metricas import calcular_metricas_componente, selecionar_no_inicial
-from mosp.refinamento import refinamento_hibrido
->>>>>>> 61d64c88c28b92fd2b808f8ae1c1ea5379f92526
+
+from mosp.metricas import ordenacao_rapida,melhores_nos_iniciais
+from mosp.refinamento import refinamento_minimo
 from mosp.custo_nmpa import calcular_nmpa
 from networkx.algorithms.community import greedy_modularity_communities
 
@@ -207,8 +202,6 @@ def heuristica_hibrida_adaptativa_pico(grafo, matriz, limiar_densidade=0.3):
 
 def heuristica_hibrida_por_componente(grafo, matPaPe):
     """
-<<<<<<< HEAD
-<<<<<<< HEAD
     Heurística híbrida BFS/DFS adaptativa por componente conexo do grafo.
 
     Estratégia:
@@ -224,49 +217,9 @@ def heuristica_hibrida_por_componente(grafo, matPaPe):
     - A escolha BFS/DFS adaptativa melhora a qualidade da solução.
     - O log é construído por padrão individual (1 linha por padrão) para
       facilitar análise e visualização em CSV.
-=======
-    Aplica BFS ou DFS em cada componente do grafo, adaptando a profundidade com base em métricas estruturais.
-=======
-    Gera uma ordem de produção utilizando uma heurística híbrida adaptativa por componente conexo.
->>>>>>> 2b0bd8d089ee1a60b855861e8c552221ee841bbd
-
-    Motivação:
-        - Aproveita características estruturais específicas de cada componente conectado do grafo padrão-padrão.
-        - Introduz adaptações nas estratégias clássicas de BFS e DFS, considerando:
-            - O grau de conectividade (densidade do componente).
-            - A similaridade entre padrões (compartilhamento de peças).
-            - A criticidade das peças para escolha do nó inicial.
-
-    Estratégia:
-        - Em componentes densos (densidade > 0.6): aplica BFS adaptada com profundidade rasa.
-        - Em componentes moderados (densidade entre 0.3 e 0.6): aplica BFS adaptada com profundidade maior.
-        - Em componentes esparsos (densidade < 0.3): aplica DFS adaptada com limite de profundidade.
-        - Utiliza seleção heurística de nó inicial para cada componente.
-        - Aplica refinamento ao final da sequência global gerada, visando reduzir ainda mais o NMPA.
-
-    Diferença em relação às demais heurísticas:
-        - Esta abordagem atua localmente em cada componente conectado.
-        - Permite estratégias diferenciadas dentro de uma mesma instância, conforme a topologia de cada região do grafo.
-        - Explora versões aprimoradas de BFS e DFS que consideram não apenas conectividade, mas também a estrutura de peças do problema.
-
-    Args:
-        grafo (nx.Graph): grafo padrão x padrão.
-        matPaPe (np.ndarray): matriz binária padrão x peça.
-
-    Returns:
-<<<<<<< HEAD
-        ordem_final: Lista de padrões após o refinamento.
-        log_execucao: Log da estratégia adotada por componente.
->>>>>>> 61d64c88c28b92fd2b808f8ae1c1ea5379f92526
     """
     sequencia_final = []
-=======
-        tuple: sequência final de padrões e log detalhado da execução.
-    """
-
->>>>>>> 2b0bd8d089ee1a60b855861e8c552221ee841bbd
     log_execucao = []
-<<<<<<< HEAD
 
     for componente in nx.connected_components(grafo):
         if not componente:
@@ -333,56 +286,3 @@ def heuristica_hibrida_por_componente(grafo, matPaPe):
 
     # Aplica refinamento final na sequência montada
     return refinamento_minimo(sequencia_final, matPaPe, modo="padrao"), log_execucao
-
-
-
-def aleatoria(grafo):
-    """
-    Gera uma ordem de produção aleatória.
-
-    Esta heurística serve como baseline no benchmark.
-
-    Args:
-        grafo: Objeto nx.Graph (grafo padrão-padrão).
-
-    Returns:
-        ordem: Lista de padrões (vértices) em ordem aleatória.
-    """
-    vertices = list(grafo.nodes())
-    random.shuffle(vertices)
-    return vertices
-=======
-    sequencia_final = []
-
-    for componente in nx.connected_components(grafo):
-        subgrafo = grafo.subgraph(componente)
-
-        if len(componente) == 1:
-            sequencia_final.extend(componente)
-            continue
-
-        metricas = calcular_metricas_componente(subgrafo, matPaPe)
-        no_inicial = selecionar_no_inicial(subgrafo, matPaPe)
-
-        if metricas['densidade'] > 0.6:
-            sequencia = bfs_adaptado(subgrafo, no_inicial, matPaPe, profundidade_max=2)
-            tipo_busca = "BFS"
-        elif metricas['densidade'] >= 0.3:
-            sequencia = bfs_adaptado(subgrafo, no_inicial, matPaPe, profundidade_max=3)
-            tipo_busca = "BFS"
-        else:
-            visitados = set()
-            sequencia = dfs_adaptado(subgrafo, no_inicial, visitados, matPaPe, limite=3)
-            tipo_busca = "DFS"
-
-        for padrao in sequencia:
-            log_execucao.append({
-                "Padrao": padrao,
-                "Densidade": metricas["densidade"],
-                "Busca": tipo_busca
-            })
-
-        sequencia_final.extend(sequencia)
-
-    return refinamento_hibrido(sequencia_final, matPaPe), log_execucao
->>>>>>> 61d64c88c28b92fd2b808f8ae1c1ea5379f92526

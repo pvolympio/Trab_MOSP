@@ -73,34 +73,31 @@ def dfs(lista_adjacencia, vertice_inicial):
 
     return visitados
 
-<<<<<<< HEAD
 def dfs_adaptado(subgrafo, no_inicial, matPaPe, limite=2):
-=======
-def dfs_adaptado(subgrafo, no_inicial, visitados, matPaPe, limite=2):
->>>>>>> 2b0bd8d089ee1a60b855861e8c552221ee841bbd
     """
-    Executa uma busca em profundidade (DFS) com profundidade máxima controlada,
-    priorizando a visita de vizinhos mais similares (com mais peças em comum).
+    Executa uma busca em profundidade (DFS) otimizada com profundidade limitada.
 
-    Args:
-        subgrafo: componente do grafo principal (NetworkX Graph).
-        no_inicial: vértice de partida.
-        visitados: conjunto compartilhado para marcar nós visitados globalmente.
-        matPaPe: matriz padrão x peça.
-        limite: profundidade máxima permitida.
+    Ideia central:
+    - A DFS tradicional segue o caminho até onde puder antes de voltar.
+    - Aqui, impomos um limite de profundidade (parâmetro `limite`), evitando que a busca se aprofunde demais.
+    - Os vizinhos são ordenados com base em similaridade com o nó atual, favorecendo caminhos "tematicamente coesos".
 
-    Returns:
-        Sequência de visita DFS (lista de padrões).
+   
+
+    Racional do limite:
+    - Limitar a profundidade evita que a DFS vá longe demais em caminhos ruins.
+    - Um limite pequeno (ex: 2) já oferece controle e evita explorações "exageradas".
     """
-    pilha = [(no_inicial, 0)]  # Pilha DFS, com tuplas (nó, profundidade atual)
-    sequencia = []
+
+    pilha = [(no_inicial, 0)]          # Pilha para DFS (estrutura LIFO), armazenando também a profundidade atual
+    visitados = set()                  # Conjunto de nós já visitados
+    sequencia = []                     # Sequência final de visitação
 
     while pilha:
-        no_atual, profundidade = pilha.pop()  # Retira o último da pilha (LIFO)
-
+        no_atual, profundidade = pilha.pop()
         if no_atual not in visitados:
-            visitados.add(no_atual)  # Marca como visitado
-            sequencia.append(no_atual)  # Adiciona à sequência
+            visitados.add(no_atual)
+            sequencia.append(no_atual)
 
             if profundidade < limite:
                 # Seleciona vizinhos ainda não visitados

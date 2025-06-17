@@ -19,62 +19,52 @@ Exemplo de uso:
 import networkx as nx
 import numpy as np
 
-def calcular_metricas_componente(subgrafo, matPaPe):
+
+
+def ordenacao_rapida(subgrafo, matPaPe):
     """
-    Calcula métricas estruturais de um subgrafo (componente conectado), com o objetivo de caracterizá-lo e apoiar a escolha de estratégias de travessia mais adequadas (BFS ou DFS) na heurística principal.
+    Ordenação otimizada para pequenos componentes.
 
-    Métricas calculadas:
-        - Densidade: quão interconectado é o subgrafo (valor entre 0 e 1).
-        - Clustering: grau médio de agrupamento (triângulos locais).
-        - Grau médio: número médio de conexões por padrão.
-        - Diversidade: proporção de tipos de peças presentes no componente.
+    Estratégia:
+    - Ordena os nós com base no grau (nós mais conectados primeiro).
+    - Depois, ordena os nós restantes por similaridade com o primeiro nó.
+      A similaridade aqui é calculada como a interseção entre os vetores de peça.
 
-    Parâmetros:
-        subgrafo (nx.Graph): componente conectado do grafo padrão x padrão.
-        matPaPe (np.ndarray): matriz binária padrão x peça.
-
-    Retorno:
-        dict: dicionário com as métricas calculadas.
-    """
-    densidade = nx.density(subgrafo)
-    clustering = nx.average_clustering(subgrafo)
-    graus = dict(subgrafo.degree())
-    pecas_componente = np.sum(matPaPe[list(subgrafo.nodes())], axis=0)
-    diversidade = np.sum(pecas_componente > 0) / matPaPe.shape[1]
-
-    return {
-        'densidade': densidade,
-        'clustering': clustering,
-        'grau_medio': sum(graus.values()) / len(subgrafo),
-        'diversidade': diversidade
-    }
-
-def selecionar_no_inicial(subgrafo, matPaPe):
-    """
-    Seleciona (a partir de heurística) o nó inicial de travessia com base na conectividade e criticidade de peças.
-
-    Critérios considerados:
-        - Grau do vértice.
-        - Número de peças críticas presentes.
-        - Penalização para padrões que utilizam muitas peças simultaneamente.
-
-    Parâmetros:
-        subgrafo (nx.Graph): componente conectado do grafo.
-        matPaPe (np.ndarray): matriz binária padrão x peça.
-
-    Retorno:
-        int: índice do padrão selecionado como ponto inicial da travessia.
+    Racional:
+    - Para grafos pequenos (<= 5 nós), é mais rápido aplicar uma heurística leve
+      baseada em conectividade e semelhança de peças, sem usar BFS/DFS.
     """
     nos = list(subgrafo.nodes())
-    pecas_componente = np.sum(matPaPe[nos], axis=0)
-    pecas_criticas = np.argsort(-pecas_componente)[:3]
+    if len(nos) <= 1:
+        return nos
 
-    scores = []
-    for no in nos:
-        grau = subgrafo.degree(no)
-        peso_pecas_criticas = np.sum(matPaPe[no][pecas_criticas])
-        penalidade_pecas = 0.2 * np.sum(matPaPe[no])
-        score = (0.4 * grau + 0.5 * peso_pecas_criticas - penalidade_pecas)
-        scores.append(score)
+    # Ordena por grau (prioriza nós com mais conexões)
+    nos.sort(key=lambda x: -subgrafo.degree(x))
+    primeiro = nos[0]
 
-    return nos[np.argmax(scores)]
+    # Ordena os restantes por similaridade com o primeiro
+    similares = [(x, np.sum(matPaPe[primeiro] & matPaPe[x])) for x in nos[1:]]
+    nos[1:] = [x for x, _ in sorted(similares, key=lambda par: -par[1])]
+
+    return nos
+
+def melhores_nos_iniciais(subgrafo, matPaPe, top_k = 3):
+    """
+    Retorna os top-k melhores nós iniciais.
+
+    Estratégia:
+    - Classifica os nós por grau e similaridade, e pega os top_k melhores.
+
+    Racional:
+    - Permite aplicar a heurística Multi-Start (vários pontos de partida),
+      aumentando a chance de encontrar uma boa sequência final.
+    """
+    ranking = sorted(
+        subgrafo.nodes,
+        key=lambda no: (
+            0.6 * subgrafo.degree(no) +
+            0.4 * np.sum(matPaPe[no] > 0)
+        ),
+        reverse=True
+    )
+    return ranking[:top_k]

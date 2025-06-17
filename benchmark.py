@@ -39,7 +39,8 @@ from mosp.heuristicas import (
 
 def extrair_numero(nome):
     numeros = re.findall(r'\d+', nome)
-    return int(numeros[1]) if len(numeros) > 1 else int(numeros[0])
+    return int(numeros[0]) 
+
 
 def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs, caminho_tempo_csv):
     """

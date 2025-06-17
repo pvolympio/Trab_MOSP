@@ -1,17 +1,16 @@
-Instancia,NMPA_BFS,NMPA_DFS,NMPA_Hibrida,NMPA_Comunidades,NMPA_Pico,NMPA_Componentes,NMPA_Aleatoria
-Cenário 3 - 1 - exemplo,8,8,8,5,8,8,7
-Cenário 3 - 2 - Miller,16,20,16,16,16,14,20
-Cenário 3 - 3 - p4050n10,26,32,26,27,26,14,31
-Cenário 3 - 4 - scoop-A_FA+AA-_12,16,17,16,14,16,11,20
-Cenário 3 - 5 - scoop-A_FA+AA-_13,27,30,28,26,27,19,35
-Cenário 3 - 6 - scoop-B_22X18_50,10,10,10,10,10,13,12
-Cenário 3 - 7 - Random-30-30-6-2,25,28,28,25,25,28,27
-Cenário 3 - 8 - Random-100-50-4-3,38,49,48,40,38,34,51
-Cenário 3 - 9 - Random-150-150-6-1,124,137,134,121,124,119,136
-Cenário 3 - 10 - Random-400-400-4-1,251,290,258,239,251,67,303
-Cenário 3 - 11 - Random-1000-1000-8-5,907,969,907,923,907,809,979
-Cenário 3 - 12 - Random- 600x600,477,527,485,468,477,296,524
-Cenário 3 - 13 - Random- 800x800,752,791,756,758,752,733,792
-Cenário 3 - 14 - Random- 1000x1000,997,1000,1000,998,997,994,1000
-Cenário 3 - 15- Random - 1000x1000,824,911,830,837,824,417,927
-Cenário 3 - 16- Random - 1000x1000,967,1000,986,990,967,972,998
+Instancia,NMPA_BFS,NMPA_DFS,NMPA_Comunidades,NMPA_Pico,NMPA_Componentes
+Cenario 1 - 14x8,8,8,5,8,8
+Cenario 2 - 10x14,10,10,10,10,13
+Cenario 3 - 30x30,25,28,25,25,28
+Cenario 4 - 40x20,16,20,16,16,14
+Cenario 5 - 40x50,26,32,27,26,14
+Cenario 6 - 20x75,16,17,14,16,11
+Cenario 7 - 37x134,27,30,26,27,19
+Cenario 8 - 50x100,38,49,40,38,34
+Cenario 9 - 150x150,124,137,121,124,119
+Cenario 10 - 400x400,251,290,239,251,67
+Cenario 11 - 600x600,477,527,468,477,296
+Cenario 12 - 800x800,752,791,758,752,733
+Cenario 13 - 1000x1000,907,969,923,907,809
+Cenario 14 - 1000x1000,997,1000,998,997,994
+Cenario 15 - 1000x1000,824,911,837,824,417

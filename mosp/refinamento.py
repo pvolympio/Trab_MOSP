@@ -23,88 +23,37 @@ import numpy as np
 from .custo_nmpa import calcular_nmpa
 import itertools
 
-def refinamento_diferenciado(sequencia, matPaPe, n_iter=5):
+def refinamento_minimo(sequencia, matPaPe, modo = "padrao"):
     """
-    Refinamento global com trocas locais e permutações parciais para tentar reduzir o NMPA.
+    Refinamento leve que tenta melhorar a sequência sem piorar o NMPA.
 
-    Parâmetros:
-        sequencia (list): ordem inicial de padrões.
-        matPaPe (np.ndarray): matriz padrão x peça.
-        n_iter (int): número de iterações de refinamento.
+    Estratégia:
+    - Testa se inverter a sequência melhora o NMPA.
+    - Em seguida, tenta fazer trocas locais entre pares vizinhos.
 
-    Retorno:
-        list: nova sequência refinada.
+    Racional:
+    - Refinamentos simples ajudam a corrigir falhas das heurísticas,
+      sem custo computacional elevado.
     """
+    if len(sequencia) <= 3:
+        return sequencia
+
+    nmpa_original = calcular_nmpa(sequencia, matPaPe)
+    sequencia_invertida = sequencia[::-1]
+    nmpa_invertido = calcular_nmpa(sequencia_invertida, matPaPe)
+
+    if nmpa_invertido < nmpa_original:
+        return sequencia_invertida
+
     melhor_seq = sequencia.copy()
-    melhor_nmpa = calcular_nmpa(sequencia, matPaPe)
+    melhor_nmpa = nmpa_original
 
-    for _ in range(n_iter):
-        for i in range(len(sequencia) - 1):
-            nova_seq = sequencia.copy()
-            nova_seq[i], nova_seq[i + 1] = nova_seq[i + 1], nova_seq[i]
-            novo_nmpa = calcular_nmpa(nova_seq, matPaPe)
+    for i in range(len(sequencia) - 1):
+        nova_seq = melhor_seq.copy()
+        nova_seq[i], nova_seq[i + 1] = nova_seq[i + 1], nova_seq[i]
+        novo_nmpa = calcular_nmpa(nova_seq, matPaPe)
 
-            if novo_nmpa < melhor_nmpa:
-                melhor_seq, melhor_nmpa = nova_seq, novo_nmpa
-
-            if i < len(sequencia) - 3:
-                for j in range(i + 2, min(i + 5, len(sequencia))):
-                    nova_seq = sequencia.copy()
-                    nova_seq[i], nova_seq[j] = nova_seq[j], nova_seq[i]
-                    novo_nmpa = calcular_nmpa(nova_seq, matPaPe)
-
-                    if novo_nmpa < melhor_nmpa:
-                        melhor_seq, melhor_nmpa = nova_seq, novo_nmpa
-
-        sequencia = melhor_seq.copy()
+        if novo_nmpa < melhor_nmpa:
+            melhor_seq, melhor_nmpa = nova_seq, novo_nmpa
 
     return melhor_seq
-
-def refinamento_hotspots(sequencia, matPaPe, janela=5):
-    """
-    Refinamento local em regiões (hotspots) de maior concentração de pilhas abertas.
-
-    Parâmetros:
-        sequencia (list): ordem inicial de padrões.
-        matPaPe (np.ndarray): matriz padrão x peça.
-        janela (int): tamanho da região analisada.
-
-    Retorno:
-        list: nova sequência refinada.
-    """
-    max_pilhas = 0
-    pior_inicio = 0
-    for i in range(len(sequencia) - janela + 1):
-        nmpa_local = calcular_nmpa(sequencia[i:i + janela], matPaPe)
-        if nmpa_local > max_pilhas:
-            max_pilhas = nmpa_local
-            pior_inicio = i
-
-    bloco = sequencia[pior_inicio:pior_inicio + janela]
-    melhor_bloco = bloco.copy()
-    melhor_nmpa = max_pilhas
-
-    for perm in itertools.permutations(bloco):
-        nova_sequencia = sequencia[:pior_inicio] + list(perm) + sequencia[pior_inicio + janela:]
-        novo_nmpa = calcular_nmpa(nova_sequencia, matPaPe)
-        if novo_nmpa < melhor_nmpa:
-            melhor_bloco = perm
-            melhor_nmpa = novo_nmpa
-
-    return sequencia[:pior_inicio] + list(melhor_bloco) + sequencia[pior_inicio + janela:]
-
-def refinamento_hibrido(sequencia, matPaPe):
-    """
-    Aplica o refinamento diferenciado e, caso necessário, o refinamento por hotspots.
-
-    Parâmetros:
-        sequencia (list): ordem inicial de padrões.
-        matPaPe (np.ndarray): matriz padrão x peça.
-
-    Retorno:
-        list: sequência refinada final.
-    """
-    seq = refinamento_diferenciado(sequencia, matPaPe, n_iter=3)
-    if len(seq) > 10:
-        seq = refinamento_hotspots(seq, matPaPe)
-    return seq
