@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 Este arquivo contém as funções de Busca em Profundidade (DFS) para percorrer o grafo padrão-padrão.
 
@@ -71,7 +73,11 @@ def dfs(lista_adjacencia, vertice_inicial):
 
     return visitados
 
+<<<<<<< HEAD
 def dfs_adaptado(subgrafo, no_inicial, matPaPe, limite=2):
+=======
+def dfs_adaptado(subgrafo, no_inicial, visitados, matPaPe, limite=2):
+>>>>>>> 2b0bd8d089ee1a60b855861e8c552221ee841bbd
     """
     Executa uma busca em profundidade (DFS) com profundidade máxima controlada,
     priorizando a visita de vizinhos mais similares (com mais peças em comum).

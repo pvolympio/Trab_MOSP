@@ -19,7 +19,7 @@ from mosp.leitura_instancia import criar_matriz_padroes_pecas
 from mosp.grafo import construir_grafo
 from mosp.custo_nmpa import calcular_nmpa
 from mosp.heuristicas import (
-    heuristica_comunidades_adaptativa,
+    heuristica_hibrida_comunidades,
     heuristica_hibrida_adaptativa_pico,
     heuristica_hibrida_por_componente
 )
@@ -28,7 +28,7 @@ from mosp.busca_dfs import dfs
 
 def main():
     # Nome da instância (sem .txt)
-    nome_instancia = "Cenário 3 - 14 - Random- 1000x1000"
+    nome_instancia = "Cenario 14 - 1000x1000"
     caminho_instancia = f"cenarios/{nome_instancia}.txt"
 
     # 1. Ler a matriz padrão × peça
@@ -39,10 +39,10 @@ def main():
     lista_adjacencia = {v: list(grafo.neighbors(v)) for v in grafo.nodes()}
 
     # 3. SELECIONE A HEURÍSTICA OU BUSCA AQUI
-    heuristica = "pico"  # "comunidades", "pico", "componentes", "bfs", "dfs"
+    heuristica = "componentes"  # "comunidades", "pico", "componentes", "bfs", "dfs"
 
     if heuristica == "comunidades":
-        ordem, log_execucao = heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3)
+        ordem, log_execucao = heuristica_hibrida_comunidades(grafo, limiar_densidade=0.3)
         nome_arquivo_log = f"log_comunidades_{nome_instancia}.csv"
 
     elif heuristica == "pico":
