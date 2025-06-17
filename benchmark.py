@@ -9,10 +9,8 @@ Fluxo:
     - Aplica cada estratégia:
         - BFS
         - DFS
-        - Heurística híbrida (limiar 0.3)
         - Heurística comunidades (limiar 0.3)
         - Heurística baseada em pico de NMPA
-        - Aleatória
     - Calcula o NMPA de cada ordem
     - Salva:
         - CSV com os NMPAs gerais (para todas as instâncias)
@@ -33,12 +31,11 @@ from mosp.custo_nmpa import calcular_nmpa
 from mosp.busca_bfs import bfs
 from mosp.busca_dfs import dfs
 from mosp.heuristicas import (
-    heuristica_hibrida_adaptativa,
     heuristica_comunidades_adaptativa,
     heuristica_hibrida_adaptativa_pico,
     heuristica_hibrida_por_componente,
-    aleatoria
 )
+
 def extrair_numero(nome):
     numeros = re.findall(r'\d+', nome)
     return int(numeros[1]) if len(numeros) > 1 else int(numeros[0])
@@ -79,10 +76,6 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs, caminho_
             tempo_dfs = round(time.perf_counter() - inicio, 4)
 
             inicio = time.perf_counter()
-            ordem_hibrida, log_hibrida = heuristica_hibrida_adaptativa(grafo, limiar_densidade=0.3)
-            tempo_hibrida = round(time.perf_counter() - inicio, 4)
-
-            inicio = time.perf_counter()
             ordem_comunidades, log_comunidades = heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3)
             tempo_comunidades = round(time.perf_counter() - inicio, 4)
 
@@ -94,42 +87,29 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs, caminho_
             ordem_por_componente,log_componentes = heuristica_hibrida_por_componente(grafo, matriz)
             tempo_componentes = round(time.perf_counter() - inicio, 4)
 
-            inicio = time.perf_counter()
-            ordem_aleatoria = aleatoria(grafo)
-            tempo_aleatoria = round(time.perf_counter() - inicio, 4)
-
             nmpa_bfs = calcular_nmpa(ordem_bfs, matriz)
             nmpa_dfs = calcular_nmpa(ordem_dfs, matriz)
-            nmpa_hibrida = calcular_nmpa(ordem_hibrida, matriz)
             nmpa_comunidades = calcular_nmpa(ordem_comunidades, matriz)
             nmpa_pico = calcular_nmpa(ordem_pico, matriz)
             nmpa_por_componente = calcular_nmpa(ordem_por_componente, matriz)
-            nmpa_aleatoria = calcular_nmpa(ordem_aleatoria, matriz)
 
             resultados.append({
                 "Instancia": nome_instancia,
                 "NMPA_BFS": nmpa_bfs,
                 "NMPA_DFS": nmpa_dfs,
-                "NMPA_Hibrida": nmpa_hibrida,
                 "NMPA_Comunidades": nmpa_comunidades,
                 "NMPA_Pico": nmpa_pico,
-                "NMPA_Componentes": nmpa_por_componente,
-                "NMPA_Aleatoria": nmpa_aleatoria
+                "NMPA_Componentes": nmpa_por_componente
             })
 
             tempos.append({
                 "Instancia": nome_instancia,
                 "Tempo_BFS (s)": tempo_bfs,
                 "Tempo_DFS (s)": tempo_dfs,
-                "Tempo_Hibrida (s)": tempo_hibrida,
                 "Tempo_Comunidades (s)": tempo_comunidades,
                 "Tempo_Pico (s)": tempo_pico,
                 "Tempo_Componentes (s)": tempo_componentes,
-                "Tempo_Aleatoria (s)": tempo_aleatoria
             })
-
-            df_log_hibrida = pd.DataFrame(log_hibrida)
-            df_log_hibrida.to_csv(os.path.join(pasta_logs, f"log_hibrida_{nome_instancia}.csv"), index=False)
 
             df_log_comunidades = pd.DataFrame(log_comunidades)
             df_log_comunidades.to_csv(os.path.join(pasta_logs, f"log_comunidades_{nome_instancia}.csv"), index=False)
@@ -143,7 +123,7 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs, caminho_
     os.makedirs(os.path.dirname(caminho_saida_csv), exist_ok=True)
     with open(caminho_saida_csv, mode='w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=[
-            "Instancia", "NMPA_BFS", "NMPA_DFS", "NMPA_Hibrida", "NMPA_Comunidades", "NMPA_Pico", "NMPA_Componentes", "NMPA_Aleatoria"
+            "Instancia", "NMPA_BFS", "NMPA_DFS", "NMPA_Comunidades", "NMPA_Pico", "NMPA_Componentes"
         ])
         writer.writeheader()
         writer.writerows(resultados)
@@ -151,7 +131,7 @@ def executar_benchmark(pasta_instancias, caminho_saida_csv, pasta_logs, caminho_
     os.makedirs(os.path.dirname(caminho_tempo_csv), exist_ok=True)
     with open(caminho_tempo_csv, mode='w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=[
-            "Instancia", "Tempo_BFS (s)", "Tempo_DFS (s)", "Tempo_Hibrida (s)", "Tempo_Comunidades (s)", "Tempo_Pico (s)", "Tempo_Componentes (s)", "Tempo_Aleatoria (s)"
+            "Instancia", "Tempo_BFS (s)", "Tempo_DFS (s)", "Tempo_Comunidades (s)", "Tempo_Pico (s)", "Tempo_Componentes (s)"
         ])
         writer.writeheader()
         writer.writerows(tempos)

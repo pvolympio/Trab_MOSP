@@ -1,22 +1,27 @@
 """
-Este arquivo contém a função de Busca em Largura (BFS) para percorrer o grafo padrão-padrão.
+Este arquivo contém as funções de Busca em Largura (BFS) para percorrer o grafo padrão-padrão.
 
 Descrição:
-    - Dada uma lista de adjacência e um vértice inicial, a função gera uma ordem de visitação dos padrões (vértices) utilizando o algoritmo BFS.
-    - A função inclui um mecanismo para garantir que todos os padrões sejam incluídos na ordem final, mesmo que o grafo tenha componentes desconexas (caso existam padrões que não compartilham peças com nenhum outro padrão). Isso é necessário porque o MOSP exige que todos os padrões sejam produzidos.
-    - Além disso, a função foi ajustada para ser totalmente compatível com subgrafos (por exemplo, nas comunidades detectadas por 'heuristica_comunidades_adaptativa'), em que os vértices podem não ser numerados de 0 a N-1.
+    - Dadas listas de adjacência ou subgrafos, as funções geram ordens de visitação dos padrões (vértices) utilizando variações da BFS.
+    - A função 'bfs' implementa a BFS clássica pura, garantindo a cobertura de todos os padrões, mesmo em componentes desconexas.
+    - A função 'bfs_adaptativo' implementa uma BFS com priorização por similaridade de peças e transição adaptativa para DFS em regiões de maior profundidade.
 
 Uso no projeto:
-    - A BFS gera uma ordem de produção inicial que será avaliada com a função de custo (NMPA).
-    - Essa ordem é usada no benchmark para comparar diferentes estratégias de busca.
+    - As buscas geram ordens de produção que serão avaliadas com a função de custo (NMPA).
+    - Essas ordens são usadas no benchmark para comparar diferentes estratégias de busca.
 
-Função disponível:
-    - bfs(lista_adjacencia, vertice_inicial)
+Funções disponíveis:
+    - bfs(lista_adjacencia, vertice_inicial):
+        - Realiza a BFS tradicional sobre o grafo.
+    - bfs_adaptativo(subgrafo, no_inicial, matPaPe, profundidade_max=3):
+        - Realiza a BFS adaptativa com ordenação de vizinhos e transição parcial para DFS.
 
 Exemplo de uso:
-    from mosp.busca_bfs import bfs
-    ordem = bfs(lista_adjacencia, vertice_inicial)
+    from mosp.busca_bfs import bfs, bfs_adaptativo
+    ordem_bfs = bfs(lista_adjacencia, vertice_inicial)
+    ordem_adapt = bfs_adaptativo(subgrafo, no_inicial, matriz_padroes_pecas)
 """
+
 import numpy as np
 from collections import deque
 import random
@@ -70,7 +75,11 @@ def bfs(lista_adjacencia, vertice_inicial):
 
 def bfs_adaptado(subgrafo, no_inicial, matPaPe):
     """
+<<<<<<< HEAD
     Executa uma busca em largura (BFS) otimizada para grafos densos.
+=======
+    Realiza uma busca em largura adaptativa (BFS) com possibilidade de transição para DFS em profundidades mais altas, dependendo da estrutura local do grafo e da aleatoriedade.
+>>>>>>> 61d64c88c28b92fd2b808f8ae1c1ea5379f92526
 
     Ideia central:
     - A BFS tradicional expande os vértices em ondas (nível por nível).
@@ -83,6 +92,7 @@ def bfs_adaptado(subgrafo, no_inicial, matPaPe):
     - Isso reduz o risco de abrir pilhas novas cedo demais, favorecendo a minimização do NMPA no MOSP.
     """
 
+<<<<<<< HEAD
     visitados = set()                   # Conjunto de nós já visitados
     fila = deque([no_inicial])         # Fila para BFS (estrutura FIFO)
     sequencia = []                     # Sequência final de visitação
@@ -92,6 +102,18 @@ def bfs_adaptado(subgrafo, no_inicial, matPaPe):
         if no_atual not in visitados:
             visitados.add(no_atual)
             sequencia.append(no_atual)
+=======
+    visitados = set() # Conjunto de nós já explorados
+    fila = deque([(no_inicial, 0)]) # Fila de BFS, com tuplas (nó, profundidade)
+    sequencia = [] # Armazena a sequência final dos nós visitados
+
+    while fila:
+        no_atual, profundidade = fila.popleft() # Retira o primeiro da fila
+
+        if no_atual not in visitados:
+            visitados.add(no_atual) # Marca como visitado
+            sequencia.append(no_atual) # Adiciona à sequência
+>>>>>>> 61d64c88c28b92fd2b808f8ae1c1ea5379f92526
 
             # Seleciona vizinhos ainda não visitados
             vizinhos = [v for v in subgrafo.neighbors(no_atual) if v not in visitados]
@@ -100,8 +122,19 @@ def bfs_adaptado(subgrafo, no_inicial, matPaPe):
                 graus = np.array([subgrafo.degree(v) for v in vizinhos])
                 similaridades = np.sum(matPaPe[no_atual] & matPaPe[vizinhos], axis=1)
 
+<<<<<<< HEAD
                 # Combinação ponderada entre grau e similaridade
                 pesos = 0.6 * graus + 0.4 * similaridades
+=======
+            for vizinho in vizinhos:
+                if vizinho not in visitados:
+                    # Se profundidade for alta, há chance de transitar para DFS
+                    if profundidade >= profundidade_max and random.random() < 0.7:
+                        # Executa DFS a partir do vizinho como fallback local
+                        sequencia.extend(dfs_limitado(subgrafo, vizinho, visitados, matPaPe, limite=2))
+                    else:
+                        fila.append((vizinho, profundidade + 1)) # Continua BFS normalmente
+>>>>>>> 61d64c88c28b92fd2b808f8ae1c1ea5379f92526
 
                 # Ordena os vizinhos com base nesses pesos (prioriza mais conectados e mais semelhantes)
                 ordenados = [v for _, v in sorted(zip(pesos, vizinhos), reverse=True)]
