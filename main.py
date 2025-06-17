@@ -19,7 +19,6 @@ from mosp.leitura_instancia import criar_matriz_padroes_pecas
 from mosp.grafo import construir_grafo
 from mosp.custo_nmpa import calcular_nmpa
 from mosp.heuristicas import (
-    heuristica_hibrida_adaptativa,
     heuristica_comunidades_adaptativa,
     heuristica_hibrida_adaptativa_pico,
     heuristica_hibrida_por_componente
@@ -29,7 +28,7 @@ from mosp.busca_dfs import dfs
 
 def main():
     # Nome da instância (sem .txt)
-    nome_instancia = "cenario1"
+    nome_instancia = "Cenário 3 - 14 - Random- 1000x1000"
     caminho_instancia = f"cenarios/{nome_instancia}.txt"
 
     # 1. Ler a matriz padrão × peça
@@ -40,23 +39,19 @@ def main():
     lista_adjacencia = {v: list(grafo.neighbors(v)) for v in grafo.nodes()}
 
     # 3. SELECIONE A HEURÍSTICA OU BUSCA AQUI
-    heuristica = "pico"  # "hibrida", "comunidades", "pico", "bfs", "dfs", "componentes"
+    heuristica = "pico"  # "comunidades", "pico", "componentes", "bfs", "dfs"
 
-    if heuristica == "hibrida":
-        ordem, log_execucao = heuristica_hibrida_adaptativa(grafo, limiar_densidade=0.3)
-        nome_arquivo_log = f"log_hibrida_{nome_instancia}.csv"
-
-    elif heuristica == "componentes":
-        ordem, log_execucao = heuristica_hibrida_por_componente(grafo,matriz)
-        nome_arquivo_log =  f"log_componentes_{nome_instancia}.csv"
-
-    elif heuristica == "comunidades":
+    if heuristica == "comunidades":
         ordem, log_execucao = heuristica_comunidades_adaptativa(grafo, limiar_densidade=0.3)
         nome_arquivo_log = f"log_comunidades_{nome_instancia}.csv"
 
     elif heuristica == "pico":
         ordem, log_execucao = heuristica_hibrida_adaptativa_pico(grafo, matriz)
         nome_arquivo_log = f"log_hibrida_pico_{nome_instancia}.csv"
+    
+    elif heuristica == "componentes":
+        ordem, log_execucao = heuristica_hibrida_por_componente(grafo,matriz)
+        nome_arquivo_log =  f"log_componentes_{nome_instancia}.csv"
 
     elif heuristica == "bfs":
         ordem = bfs(lista_adjacencia, vertice_inicial=0)
@@ -71,7 +66,7 @@ def main():
         nome_arquivo_log = f"log_dfs_{nome_instancia}.csv"
 
     else:
-        raise ValueError("Heurística inválida! Escolha entre: 'hibrida', 'comunidades', 'pico', 'bfs' ou 'dfs'.")
+        raise ValueError("Heurística inválida! Escolha entre: 'comunidades', 'pico', 'componentes', 'bfs' ou 'dfs'.")
 
     # 4. Calcular NMPA
     nmpa = calcular_nmpa(ordem, matriz)

@@ -1,22 +1,27 @@
 """
-Este arquivo contém a função de Busca em Profundidade (DFS) para percorrer o grafo padrão-padrão.
+Este arquivo contém as funções de Busca em Profundidade (DFS) para percorrer o grafo padrão-padrão.
 
 Descrição:
-    - Dada uma lista de adjacência e um vértice inicial, a função gera uma ordem de visitação dos padrões (vértices) utilizando o algoritmo DFS (versão iterativa).
-    - A função inclui um mecanismo para garantir que todos os padrões sejam incluídos na ordem final, mesmo que o grafo tenha componentes desconexas (caso existam padrões que não compartilham peças com nenhum outro padrão). Isso é necessário porque o MOSP exige que todos os padrões sejam produzidos.
-    - Além disso, a função foi ajustada para ser totalmente compatível com subgrafos (por exemplo, nas comunidades detectadas por 'heuristica_comunidades_adaptativa'), em que os vértices podem não ser numerados de 0 a N-1.
+    - Dadas listas de adjacência ou subgrafos, as funções geram ordens de visitação dos padrões (vértices) utilizando variações da DFS.
+    - A função 'dfs' implementa a DFS clássica pura, garantindo a cobertura de todos os padrões, mesmo em componentes desconexas.
+    - A função 'dfs_limitado' implementa uma DFS com profundidade máxima controlada, priorizando vizinhos com maior similaridade de peças, de modo a balancear exploração e fechamento precoce de pilhas.
 
 Uso no projeto:
-    - A DFS gera uma ordem de produção inicial que será avaliada com a função de custo (NMPA).
-    - Essa ordem é usada no benchmark para comparar diferentes estratégias de busca.
+    - As buscas geram ordens de produção que serão avaliadas com a função de custo (NMPA).
+    - Essas ordens são usadas no benchmark para comparar diferentes estratégias de busca e adaptação.
 
-Função disponível:
-    - dfs(lista_adjacencia, vertice_inicial)
+Funções disponíveis:
+    - dfs(lista_adjacencia, vertice_inicial):
+        - Realiza a DFS tradicional sobre o grafo.
+    - dfs_limitado(subgrafo, no_inicial, visitados, matPaPe, limite=2):
+        - Realiza uma DFS limitada em profundidade, priorizando vizinhos mais similares na escolha de expansão.
 
 Exemplo de uso:
-    from mosp.busca_dfs import dfs
-    ordem = dfs(lista_adjacencia, vertice_inicial)
+    from mosp.busca_dfs import dfs, dfs_limitado
+    ordem_dfs = dfs(lista_adjacencia, vertice_inicial)
+    ordem_limitada = dfs_limitado(subgrafo, no_inicial, visitados, matriz_padroes_pecas, limite=2)
 """
+
 import numpy as np
 
 def dfs(lista_adjacencia, vertice_inicial):
@@ -31,8 +36,7 @@ def dfs(lista_adjacencia, vertice_inicial):
 
     Returns:
         ordem: Lista de padrões (vértices) na ordem em que foram visitados pela DFS.
-               Se o grafo tiver componentes desconexas, os padrões isolados ou de outras componentes
-               serão adicionados ao final da ordem.
+               Se o grafo tiver componentes desconexas, os padrões isolados ou de outras componentes serão adicionados ao final da ordem.
     """
     # Correção: pegar os vértices reais, não um range de 0 até N-1
     todos_vertices = list(lista_adjacencia.keys())
@@ -69,8 +73,7 @@ def dfs(lista_adjacencia, vertice_inicial):
 
 def dfs_limitado(subgrafo, no_inicial, visitados, matPaPe, limite=2):
     """
-    Executa uma busca em profundidade (DFS) com profundidade máxima controlada,
-    priorizando a visita de vizinhos mais similares (com mais peças em comum).
+    Executa uma busca em profundidade (DFS) com profundidade máxima controlada, priorizando a visita de vizinhos mais similares (com mais peças em comum).
 
     Args:
         subgrafo: componente do grafo principal (NetworkX Graph).
@@ -82,15 +85,15 @@ def dfs_limitado(subgrafo, no_inicial, visitados, matPaPe, limite=2):
     Returns:
         Sequência de visita DFS (lista de padrões).
     """
-    pilha = [(no_inicial, 0)]  # Pilha DFS, com tuplas (nó, profundidade atual)
+    pilha = [(no_inicial, 0)] # Pilha DFS, com tuplas (nó, profundidade atual)
     sequencia = []
 
     while pilha:
-        no_atual, profundidade = pilha.pop()  # Retira o último da pilha (LIFO)
+        no_atual, profundidade = pilha.pop() # Retira o último da pilha
 
         if no_atual not in visitados:
-            visitados.add(no_atual)  # Marca como visitado
-            sequencia.append(no_atual)  # Adiciona à sequência
+            visitados.add(no_atual) # Marca como visitado
+            sequencia.append(no_atual) # Adiciona à sequência
 
             if profundidade < limite:
                 # Ordena os vizinhos por similaridade de peças, priorizando os mais parecidos
