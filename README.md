@@ -18,7 +18,9 @@ Trab_MOSP/
 │   ├── refinamento.py
 ├── benchmark.py            
 ├── main.py                 
-├── gerar_grafico.py        
+├── gerar_grafico.py
+├── teste_limiar_densidade.py
+├── plot_teste_limiar.py   
 ├── cenarios/               
 ├── resultados/             
 └── .gitignore
