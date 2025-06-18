@@ -31,7 +31,7 @@ Trab_MOSP/
 - Python 3.6 ou superior (projeto testado com Python 3.12)
 - Bibliotecas necessárias:
   ```
-  pip install networkx pandas matplotlib
+  pip install networkx pandas matplotlib random deque itertools
   ```
   
 ## Como executar
