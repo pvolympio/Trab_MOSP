@@ -1,20 +1,5 @@
-"""
-Este arquivo contém as funções responsáveis pelo cálculo de métricas estruturais dos componentes do grafo e pela seleção heurística do nó inicial de travessia.
 
-Descrição:
-    - As métricas caracterizam a conectividade e diversidade de cada componente conectado do grafo padrão x padrão.
-    - A seleção do nó inicial busca identificar padrões críticos, considerando grau de conectividade e relevância das peças, para orientar as travessias.
 
-Contexto:
-    - No problema MOSP, essas métricas apoiam a definição de estratégias adaptativas de busca (BFS ou DFS), explorando a estrutura do grafo na geração de sequências produtivas.
-
-Funções disponíveis:
-    - calcular_metricas_componente(subgrafo, matPaPe)
-    - selecionar_no_inicial(subgrafo, matPaPe)
-
-Exemplo de uso:
-    from mosp.metricas import calcular_metricas_componente, selecionar_no_inicial
-"""
 
 import networkx as nx
 import numpy as np
