@@ -1,23 +1,4 @@
-"""
-Este arquivo contém as funções responsáveis pelos refinamentos aplicados sobre as ordens de produção geradas inicialmente pelas heurísticas.
 
-Descrição:
-    - Os refinamentos buscam reduzir o número máximo de pilhas abertas (NMPA) através de permutações locais e globais na sequência.
-    - As estratégias atuam sobre a sequência completa ou em regiões críticas identificadas (hotspots).
-    - São aplicados como etapas posteriores às heurísticas principais.
-
-Contexto:
-    - No problema MOSP, o refinamento permite melhorar soluções heurísticas iniciais, tentando reduzir ainda mais o NMPA.
-
-Funções disponíveis:
-    - refinamento_diferenciado(sequencia, matPaPe, n_iter=5)
-    - refinamento_hotspots(sequencia, matPaPe, janela=5)
-    - refinamento_hibrido(sequencia, matPaPe)
-
-Exemplo de uso:
-    from mosp.refinamento import refinamento_hibrido
-    sequencia_final = refinamento_hibrido(sequencia_inicial, matriz_padroes_pecas)
-"""
 
 import numpy as np
 from .custo_nmpa import calcular_nmpa
